@@ -1,0 +1,75 @@
+package repository
+
+import (
+	"context"
+	"errors"
+
+	"kerjadekat/backend/internal/domain"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
+
+type AgentPostgres struct {
+	db *gorm.DB
+}
+
+func NewAgentPostgres(db *gorm.DB) *AgentPostgres {
+	return &AgentPostgres{db: db}
+}
+
+func (r *AgentPostgres) RegisterWorker(ctx context.Context, p domain.RegisterWorkerParams) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(p.User).Error; err != nil {
+			return err
+		}
+		p.Profile.UserID = p.User.ID
+		if err := tx.Create(p.Profile).Error; err != nil {
+			return err
+		}
+		if len(p.Skills) == 0 {
+			return nil
+		}
+		for i := range p.Skills {
+			p.Skills[i].WorkerID = p.Profile.ID
+		}
+		return tx.Create(&p.Skills).Error
+	})
+}
+
+func (r *AgentPostgres) KelurahanExists(ctx context.Context, id int) (bool, error) {
+	var count int64
+	if err := r.db.WithContext(ctx).Model(&domain.Kelurahan{}).Where("id = ?", id).Count(&count).Error; err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (r *AgentPostgres) AgentHasTerritory(ctx context.Context, agentID uuid.UUID, kelurahanID int) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&domain.AgentTerritory{}).
+		Where("agent_id = ? AND kelurahan_id = ?", agentID, kelurahanID).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (r *AgentPostgres) FindWorkerByUserID(ctx context.Context, userID uuid.UUID) (*domain.WorkerProfile, error) {
+	var p domain.WorkerProfile
+	err := r.db.WithContext(ctx).
+		Preload("User").
+		Preload("User.Kelurahan").
+		Preload("Skills.Skill").
+		First(&p, "user_id = ?", userID).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, domain.ErrNotFound
+		}
+		return nil, err
+	}
+	return &p, nil
+}
+
+var _ domain.AgentRepository = (*AgentPostgres)(nil)
