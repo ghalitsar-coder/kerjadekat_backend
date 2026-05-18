@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	agentusecase "kerjadekat/backend/internal/agent/usecase"
+	"kerjadekat/backend/internal/domain"
 	"kerjadekat/backend/internal/httpx"
 	"kerjadekat/backend/internal/httpapi/middleware"
 
@@ -21,6 +22,19 @@ type Handler struct {
 
 func NewHandler(agents *agentusecase.Agents) *Handler {
 	return &Handler{agents: agents}
+}
+
+func (h *Handler) ListTerritories(c *gin.Context) {
+	cl := middleware.MustClaims(c)
+	rows, err := h.agents.ListTerritories(c.Request.Context(), cl.UserID)
+	if err != nil {
+		httpx.WriteError(c, err)
+		return
+	}
+	if rows == nil {
+		rows = []domain.Kelurahan{}
+	}
+	c.JSON(http.StatusOK, gin.H{"items": rows})
 }
 
 func (h *Handler) RegisterWorker(c *gin.Context) {

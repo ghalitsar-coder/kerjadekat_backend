@@ -95,6 +95,7 @@ func Mount(r *gin.Engine, d Deps) {
 
 	if d.Agents != nil {
 		agentRoutes := authed.Group("/agent", middleware.RequireRoles(domain.RoleAgent, domain.RoleAdmin))
+		agentRoutes.GET("/territories", d.Agents.ListTerritories)
 		agentRoutes.POST("/workers", d.Agents.RegisterWorker)
 	}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"math"
 	"strings"
@@ -29,10 +30,25 @@ func (p *NullPoint) Scan(value interface{}) error {
 
 	switch v := value.(type) {
 	case string:
-		return p.scanWKT([]byte(v))
+		s := strings.TrimSpace(v)
+		if b, ok := decodeHexEWKB(s); ok {
+			if lat, lng, ok := parseEWKBPointXY(b); ok {
+				p.Lat, p.Lng, p.Valid = lat, lng, true
+				return nil
+			}
+		}
+		return p.scanWKT([]byte(s))
 	case []byte:
-		if len(v) > 0 && v[0] != 0x01 && v[0] != 0x00 && (v[0] == 'P' || v[0] == 'p') {
-			return p.scanWKT(v)
+		if len(v) > 0 && v[0] != 0x01 && v[0] != 0x00 {
+			if v[0] == 'P' || v[0] == 'p' {
+				return p.scanWKT(v)
+			}
+			if b, ok := decodeHexEWKB(string(v)); ok {
+				if lat, lng, ok := parseEWKBPointXY(b); ok {
+					p.Lat, p.Lng, p.Valid = lat, lng, true
+					return nil
+				}
+			}
 		}
 		lat, lng, ok := parseEWKBPointXY(v)
 		if ok {
@@ -122,4 +138,21 @@ func parseEWKBPointXY(b []byte) (lat, lng float64, ok bool) {
 	x := math.Float64frombits(binary.LittleEndian.Uint64(b[off : off+8]))
 	y := math.Float64frombits(binary.LittleEndian.Uint64(b[off+8 : off+16]))
 	return y, x, true
+}
+
+func decodeHexEWKB(s string) ([]byte, bool) {
+	if s == "" || len(s)%2 != 0 {
+		return nil, false
+	}
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if (c < '0' || c > '9') && (c < 'a' || c > 'f') && (c < 'A' || c > 'F') {
+			return nil, false
+		}
+	}
+	b, err := hex.DecodeString(s)
+	if err != nil || len(b) == 0 {
+		return nil, false
+	}
+	return b, true
 }

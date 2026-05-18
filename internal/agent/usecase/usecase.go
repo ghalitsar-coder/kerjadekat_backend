@@ -204,3 +204,7 @@ func (a *Agents) RegisterWorker(ctx context.Context, in RegisterWorkerInput) (*R
 		OCRPreview:    OCRPreview{NIK: extracted.NIK, FullName: extracted.FullName},
 	}, nil
 }
+
+func (a *Agents) ListTerritories(ctx context.Context, agentID uuid.UUID) ([]domain.Kelurahan, error) {
+	return a.agents.ListAgentTerritories(ctx, agentID)
+}

@@ -56,6 +56,20 @@ func (r *AgentPostgres) AgentHasTerritory(ctx context.Context, agentID uuid.UUID
 	return count > 0, nil
 }
 
+func (r *AgentPostgres) ListAgentTerritories(ctx context.Context, agentID uuid.UUID) ([]domain.Kelurahan, error) {
+	var rows []domain.Kelurahan
+	err := r.db.WithContext(ctx).
+		Table("kelurahans").
+		Joins("INNER JOIN agent_territories at ON at.kelurahan_id = kelurahans.id").
+		Where("at.agent_id = ?", agentID).
+		Order("kelurahans.name asc").
+		Find(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
 func (r *AgentPostgres) FindWorkerByUserID(ctx context.Context, userID uuid.UUID) (*domain.WorkerProfile, error) {
 	var p domain.WorkerProfile
 	err := r.db.WithContext(ctx).

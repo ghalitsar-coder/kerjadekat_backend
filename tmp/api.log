@@ -1,0 +1,343 @@
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /health                   --> kerjadekat/backend/internal/httpapi.Mount.func1 (3 handlers)
+[GIN-debug] GET    /api/v1/ws                --> kerjadekat/backend/internal/order/delivery/ws.(*Hub).HandleWS-fm (3 handlers)
+[GIN-debug] POST   /api/v1/auth/otp/request  --> kerjadekat/backend/internal/httpapi.Mount.func2 (3 handlers)
+[GIN-debug] POST   /api/v1/auth/otp/verify   --> kerjadekat/backend/internal/httpapi.Mount.func3 (3 handlers)
+[GIN-debug] POST   /api/v1/auth/refresh      --> kerjadekat/backend/internal/httpapi.Mount.func4 (3 handlers)
+[GIN-debug] POST   /api/v1/agent/workers     --> kerjadekat/backend/internal/agent/delivery/http.(*Handler).RegisterWorker-fm (5 handlers)
+[GIN-debug] GET    /api/v1/me                --> kerjadekat/backend/internal/httpapi.Mount.func5 (4 handlers)
+[GIN-debug] GET    /api/v1/skill-categories  --> kerjadekat/backend/internal/httpapi.Mount.func6 (4 handlers)
+[GIN-debug] POST   /api/v1/orders            --> kerjadekat/backend/internal/httpapi.Mount.func7 (4 handlers)
+[GIN-debug] GET    /api/v1/orders            --> kerjadekat/backend/internal/httpapi.Mount.func8 (4 handlers)
+[GIN-debug] GET    /api/v1/orders/:id        --> kerjadekat/backend/internal/httpapi.Mount.func9 (4 handlers)
+[GIN-debug] POST   /api/v1/orders/:id/accept --> kerjadekat/backend/internal/httpapi.Mount.func10 (4 handlers)
+[GIN-debug] POST   /api/v1/orders/:id/start  --> kerjadekat/backend/internal/httpapi.Mount.func11 (4 handlers)
+[GIN-debug] POST   /api/v1/orders/:id/complete --> kerjadekat/backend/internal/httpapi.Mount.func12 (4 handlers)
+[GIN-debug] POST   /api/v1/orders/:id/cancel --> kerjadekat/backend/internal/httpapi.Mount.func13 (4 handlers)
+[GIN-debug] GET    /api/v1/workers/me        --> kerjadekat/backend/internal/httpapi.Mount.func14 (4 handlers)
+[GIN-debug] PATCH  /api/v1/workers/me/availability --> kerjadekat/backend/internal/httpapi.Mount.func15 (4 handlers)
+[GIN-debug] PATCH  /api/v1/workers/me/location --> kerjadekat/backend/internal/httpapi.Mount.func16 (4 handlers)
+2026/05/18 16:25:13 KerjaDekat API listening on :8080 (ws=GET /api/v1/ws, auth via first frame)
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :8080
+2026/05/18 16:25:18 sms_mock: OTP for 08210006318 = 433183
+[GIN] 2026/05/18 - 16:25:18 | 204 |      241.35µs |             ::1 | POST     "/api/v1/auth/otp/request"
+
+2026/05/18 16:25:18 [31;1m/home/archlinux/My Works/KerjaDekat/backend/internal/user/repository/postgres.go:42 [35;1mrecord not found
+[0m[33m[1.561ms] [34;1m[rows:0][0m SELECT * FROM "users" WHERE phone_number = '08210006318' ORDER BY "users"."id" LIMIT 1
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/user/repository/postgres.go:22
+[0m[33m[1.947ms] [34;1m[rows:1][0m INSERT INTO "users" ("phone_number","full_name","role","nik_hash","profile_photo","ktp_photo_ref","status","verified_by","verified_at","rt_rw","kelurahan_id","created_at","updated_at","id") VALUES ('08210006318','Pengguna','consumer',NULL,NULL,NULL,'active',NULL,NULL,NULL,NULL,'2026-05-18 16:25:18.798','2026-05-18 16:25:18.798','8e04852d-fa49-44d8-b9c5-666ad89a23c8') RETURNING "id"
+[GIN] 2026/05/18 - 16:25:18 | 200 |    3.810998ms |             ::1 | POST     "/api/v1/auth/otp/verify"
+2026/05/18 16:25:18 sms_mock: OTP for 08410006318 = 325353
+[GIN] 2026/05/18 - 16:25:18 | 204 |     222.964µs |             ::1 | POST     "/api/v1/auth/otp/request"
+
+2026/05/18 16:25:18 [31;1m/home/archlinux/My Works/KerjaDekat/backend/internal/user/repository/postgres.go:42 [35;1mrecord not found
+[0m[33m[0.367ms] [34;1m[rows:0][0m SELECT * FROM "users" WHERE phone_number = '08410006318' ORDER BY "users"."id" LIMIT 1
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/user/repository/postgres.go:22
+[0m[33m[0.682ms] [34;1m[rows:1][0m INSERT INTO "users" ("phone_number","full_name","role","nik_hash","profile_photo","ktp_photo_ref","status","verified_by","verified_at","rt_rw","kelurahan_id","created_at","updated_at","id") VALUES ('08410006318','Pengguna','admin',NULL,NULL,NULL,'active',NULL,NULL,NULL,NULL,'2026-05-18 16:25:18.823','2026-05-18 16:25:18.823','48a8fae6-dddf-4ee0-af68-6e5b93e39cdf') RETURNING "id"
+[GIN] 2026/05/18 - 16:25:18 | 200 |    1.369579ms |             ::1 | POST     "/api/v1/auth/otp/verify"
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/skill/repository/postgres.go:22
+[0m[33m[0.645ms] [34;1m[rows:6][0m SELECT * FROM "skill_categories" ORDER BY name asc
+[GIN] 2026/05/18 - 16:25:18 | 200 |     737.274µs |             ::1 | GET      "/api/v1/skill-categories"
+
+2026/05/18 16:25:18 [31;1m/home/archlinux/My Works/KerjaDekat/backend/internal/user/repository/postgres.go:42 [35;1mrecord not found
+[0m[33m[0.313ms] [34;1m[rows:0][0m SELECT * FROM "users" WHERE phone_number = '08310006318' ORDER BY "users"."id" LIMIT 1
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/agent/repository/postgres.go:42
+[0m[33m[0.403ms] [34;1m[rows:1][0m SELECT count(*) FROM "kelurahans" WHERE id = 1
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/skill/repository/postgres.go:30
+[0m[33m[0.314ms] [34;1m[rows:1][0m SELECT * FROM "skill_categories" WHERE id = 6 ORDER BY "skill_categories"."id" LIMIT 1
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/agent/repository/postgres.go:23
+[0m[33m[0.705ms] [34;1m[rows:1][0m INSERT INTO "users" ("phone_number","full_name","role","nik_hash","profile_photo","ktp_photo_ref","status","verified_by","verified_at","rt_rw","kelurahan_id","created_at","updated_at","id") VALUES ('08310006318','Worker QA 1779096318','worker','$2a$10$lorCdEs1Z39JTQEc3ju2Ned3OnQeIqYqm.V.r65a8e/9Vq4VlKeqe','buckets/profiles/83f1a5b1-a8ee-41ee-89a3-a26f3db49e91.txt','buckets/ktp/f9a6f517-709e-4d5f-b017-682e9a2f4076.txt','active','48a8fae6-dddf-4ee0-af68-6e5b93e39cdf','2026-05-18 16:25:18.941','001/002',1,'2026-05-18 16:25:18.942','2026-05-18 16:25:18.942','ab86af43-91e3-428b-b2c3-61d98760f1ec') RETURNING "id"
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/agent/repository/postgres.go:27
+[0m[33m[7.075ms] [34;1m[rows:1][0m INSERT INTO "worker_profiles" ("user_id","bio","base_rate","availability","last_location","location_updated_at","rating_avg","rating_count","total_jobs_done","credit_score","created_at","id") VALUES ('ab86af43-91e3-428b-b2c3-61d98760f1ec',NULL,NULL,'offline',NULL,NULL,0,0,0,0,'2026-05-18 16:25:18.943','10c22694-98dd-4163-8d65-4495d391ec80') RETURNING "id"
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/agent/repository/postgres.go:36
+[0m[33m[0.544ms] [34;1m[rows:1][0m INSERT INTO "worker_skills" ("worker_id","skill_id","level","id") VALUES ('10c22694-98dd-4163-8d65-4495d391ec80',6,'beginner','c5178ee9-6c95-4fe6-9586-bf50af398aa4') RETURNING "id"
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/agent/repository/postgres.go:65
+[0m[33m[0.201ms] [34;1m[rows:1][0m SELECT * FROM "skill_categories" WHERE "skill_categories"."id" = 6
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/agent/repository/postgres.go:65
+[0m[33m[0.470ms] [34;1m[rows:1][0m SELECT * FROM "worker_skills" WHERE "worker_skills"."worker_id" = '10c22694-98dd-4163-8d65-4495d391ec80'
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/agent/repository/postgres.go:65
+[0m[33m[0.228ms] [34;1m[rows:1][0m SELECT * FROM "kelurahans" WHERE "kelurahans"."id" = 1
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/agent/repository/postgres.go:65
+[0m[33m[0.536ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE "users"."id" = 'ab86af43-91e3-428b-b2c3-61d98760f1ec'
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/agent/repository/postgres.go:65
+[0m[33m[1.413ms] [34;1m[rows:1][0m SELECT * FROM "worker_profiles" WHERE user_id = 'ab86af43-91e3-428b-b2c3-61d98760f1ec' ORDER BY "worker_profiles"."id" LIMIT 1
+[GIN] 2026/05/18 - 16:25:18 | 201 |  110.086939ms |             ::1 | POST     "/api/v1/agent/workers"
+2026/05/18 16:25:18 sms_mock: OTP for 08310006318 = 877774
+[GIN] 2026/05/18 - 16:25:18 | 204 |     219.338µs |             ::1 | POST     "/api/v1/auth/otp/request"
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/user/repository/postgres.go:42
+[0m[33m[0.411ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE phone_number = '08310006318' ORDER BY "users"."id" LIMIT 1
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/worker/repository/postgres.go:30
+[0m[33m[0.146ms] [34;1m[rows:1][0m SELECT * FROM "skill_categories" WHERE "skill_categories"."id" = 6
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/worker/repository/postgres.go:30
+[0m[33m[0.333ms] [34;1m[rows:1][0m SELECT * FROM "worker_skills" WHERE "worker_skills"."worker_id" = '10c22694-98dd-4163-8d65-4495d391ec80'
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/worker/repository/postgres.go:30
+[0m[33m[0.174ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE "users"."id" = 'ab86af43-91e3-428b-b2c3-61d98760f1ec'
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/worker/repository/postgres.go:30
+[0m[33m[0.839ms] [34;1m[rows:1][0m SELECT * FROM "worker_profiles" WHERE user_id = 'ab86af43-91e3-428b-b2c3-61d98760f1ec' ORDER BY "worker_profiles"."id" LIMIT 1
+[GIN] 2026/05/18 - 16:25:18 | 200 |     1.55375ms |             ::1 | POST     "/api/v1/auth/otp/verify"
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/worker/repository/postgres.go:30
+[0m[33m[0.123ms] [34;1m[rows:1][0m SELECT * FROM "skill_categories" WHERE "skill_categories"."id" = 6
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/worker/repository/postgres.go:30
+[0m[33m[0.304ms] [34;1m[rows:1][0m SELECT * FROM "worker_skills" WHERE "worker_skills"."worker_id" = '10c22694-98dd-4163-8d65-4495d391ec80'
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/worker/repository/postgres.go:30
+[0m[33m[0.183ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE "users"."id" = 'ab86af43-91e3-428b-b2c3-61d98760f1ec'
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/worker/repository/postgres.go:30
+[0m[33m[0.937ms] [34;1m[rows:1][0m SELECT * FROM "worker_profiles" WHERE user_id = 'ab86af43-91e3-428b-b2c3-61d98760f1ec' ORDER BY "worker_profiles"."id" LIMIT 1
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/worker/repository/postgres.go:40
+[0m[33m[0.254ms] [34;1m[rows:0][0m INSERT INTO "users" ("phone_number","full_name","role","nik_hash","profile_photo","ktp_photo_ref","status","verified_by","verified_at","rt_rw","kelurahan_id","created_at","updated_at","id") VALUES ('08310006318','Worker QA 1779096318','worker','$2a$10$lorCdEs1Z39JTQEc3ju2Ned3OnQeIqYqm.V.r65a8e/9Vq4VlKeqe','buckets/profiles/83f1a5b1-a8ee-41ee-89a3-a26f3db49e91.txt','buckets/ktp/f9a6f517-709e-4d5f-b017-682e9a2f4076.txt','active','48a8fae6-dddf-4ee0-af68-6e5b93e39cdf','2026-05-18 16:25:18.941','001/002',1,'2026-05-18 16:25:18.942','2026-05-18 16:25:18.942','ab86af43-91e3-428b-b2c3-61d98760f1ec') ON CONFLICT DO NOTHING RETURNING "id"
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/worker/repository/postgres.go:40
+[0m[33m[0.156ms] [34;1m[rows:0][0m INSERT INTO "skill_categories" ("name","icon_url","description","id") VALUES ('AC/Kulkas','/icons/cooling.png','Servis dan perbaikan AC dan kulkas',6) ON CONFLICT DO NOTHING RETURNING "id"
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/worker/repository/postgres.go:40
+[0m[33m[0.414ms] [34;1m[rows:1][0m INSERT INTO "worker_skills" ("worker_id","skill_id","level","id") VALUES ('10c22694-98dd-4163-8d65-4495d391ec80',6,'beginner','c5178ee9-6c95-4fe6-9586-bf50af398aa4') ON CONFLICT ("id") DO UPDATE SET "worker_id"="excluded"."worker_id" RETURNING "id"
+
+2026/05/18 16:25:18 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/worker/repository/postgres.go:40
+[0m[33m[2.302ms] [34;1m[rows:1][0m UPDATE "worker_profiles" SET "user_id"='ab86af43-91e3-428b-b2c3-61d98760f1ec',"bio"=NULL,"base_rate"=NULL,"availability"='online',"last_location"=NULL,"location_updated_at"=NULL,"rating_avg"=0,"rating_count"=0,"total_jobs_done"=0,"credit_score"=0,"created_at"='2026-05-18 16:25:18.943' WHERE "id" = '10c22694-98dd-4163-8d65-4495d391ec80'
+[GIN] 2026/05/18 - 16:25:18 | 204 |    3.476421ms |             ::1 | PATCH    "/api/v1/workers/me/availability"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/worker/repository/postgres.go:30
+[0m[33m[0.124ms] [34;1m[rows:1][0m SELECT * FROM "skill_categories" WHERE "skill_categories"."id" = 6
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/worker/repository/postgres.go:30
+[0m[33m[0.298ms] [34;1m[rows:1][0m SELECT * FROM "worker_skills" WHERE "worker_skills"."worker_id" = '10c22694-98dd-4163-8d65-4495d391ec80'
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/worker/repository/postgres.go:30
+[0m[33m[0.174ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE "users"."id" = 'ab86af43-91e3-428b-b2c3-61d98760f1ec'
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/worker/repository/postgres.go:30
+[0m[33m[0.726ms] [34;1m[rows:1][0m SELECT * FROM "worker_profiles" WHERE user_id = 'ab86af43-91e3-428b-b2c3-61d98760f1ec' ORDER BY "worker_profiles"."id" LIMIT 1
+[GIN] 2026/05/18 - 16:25:19 | 204 |    1.582344ms |             ::1 | PATCH    "/api/v1/workers/me/location"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/skill/repository/postgres.go:30
+[0m[33m[0.208ms] [34;1m[rows:1][0m SELECT * FROM "skill_categories" WHERE id = 6 ORDER BY "skill_categories"."id" LIMIT 1
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:29
+[0m[33m[1.250ms] [34;1m[rows:1][0m INSERT INTO "orders" ("consumer_id","worker_id","skill_id","status","description","consumer_location","consumer_address","agreed_rate","platform_fee","payment_method_fee","xendit_invoice_id","fee_auth_id","payment_status","scheduled_at","started_at","completed_at","cancelled_reason","created_at","id") VALUES ('8e04852d-fa49-44d8-b9c5-666ad89a23c8',NULL,6,'pending_match','QA order 1779096318',ST_GeographyFromText('SRID=4326;POINT(106.800000 -6.200000)'),'Jl. QA Test',NULL,2000,'qris','mock_inv_1_1e578073-f6c9-45de-b0f6-0c9430824261','mock_auth_1_1e578073-f6c9-45de-b0f6-0c9430824261','authorized',NULL,NULL,NULL,NULL,'2026-05-18 16:25:19.013','1e578073-f6c9-45de-b0f6-0c9430824261') RETURNING "id"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:77
+[0m[33m[0.498ms] [34;1m[rows:1][0m INSERT INTO "order_status_logs" ("order_id","from_status","to_status","changed_by","change_time","note","id") VALUES ('1e578073-f6c9-45de-b0f6-0c9430824261',NULL,'pending_match','8e04852d-fa49-44d8-b9c5-666ad89a23c8','2026-05-18 16:25:19.014',NULL,'558eae7d-f15f-4364-951d-5eafbf81390d') RETURNING "id"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:73
+[0m[33m[0.324ms] [34;1m[rows:1][0m UPDATE "orders" SET "consumer_id"='8e04852d-fa49-44d8-b9c5-666ad89a23c8',"worker_id"=NULL,"skill_id"=6,"status"='offered',"description"='QA order 1779096318',"consumer_location"=ST_GeographyFromText('SRID=4326;POINT(106.800000 -6.200000)'),"consumer_address"='Jl. QA Test',"agreed_rate"=NULL,"platform_fee"=2000,"payment_method_fee"='qris',"xendit_invoice_id"='mock_inv_1_1e578073-f6c9-45de-b0f6-0c9430824261',"fee_auth_id"='mock_auth_1_1e578073-f6c9-45de-b0f6-0c9430824261',"payment_status"='authorized',"scheduled_at"=NULL,"started_at"=NULL,"completed_at"=NULL,"cancelled_reason"=NULL,"created_at"='2026-05-18 16:25:19.013' WHERE "id" = '1e578073-f6c9-45de-b0f6-0c9430824261'
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:77
+[0m[33m[0.332ms] [34;1m[rows:1][0m INSERT INTO "order_status_logs" ("order_id","from_status","to_status","changed_by","change_time","note","id") VALUES ('1e578073-f6c9-45de-b0f6-0c9430824261','pending_match','offered',NULL,'2026-05-18 16:25:19.017',NULL,'b9016008-e3c3-4f77-add4-92ad4f6784a2') RETURNING "id"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.116ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE "users"."id" = '8e04852d-fa49-44d8-b9c5-666ad89a23c8'
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.417ms] [34;1m[rows:2][0m SELECT * FROM "order_status_logs" WHERE "order_status_logs"."order_id" = '1e578073-f6c9-45de-b0f6-0c9430824261' ORDER BY change_time asc
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.103ms] [34;1m[rows:1][0m SELECT * FROM "skill_categories" WHERE "skill_categories"."id" = 6
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[1.007ms] [34;1m[rows:1][0m SELECT * FROM "orders" WHERE id = '1e578073-f6c9-45de-b0f6-0c9430824261' ORDER BY "orders"."id" LIMIT 1
+[GIN] 2026/05/18 - 16:25:19 | 201 |     6.40591ms |             ::1 | POST     "/api/v1/orders"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.160ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE "users"."id" = '8e04852d-fa49-44d8-b9c5-666ad89a23c8'
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.197ms] [34;1m[rows:2][0m SELECT * FROM "order_status_logs" WHERE "order_status_logs"."order_id" = '1e578073-f6c9-45de-b0f6-0c9430824261' ORDER BY change_time asc
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.106ms] [34;1m[rows:1][0m SELECT * FROM "skill_categories" WHERE "skill_categories"."id" = 6
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.842ms] [34;1m[rows:1][0m SELECT * FROM "orders" WHERE id = '1e578073-f6c9-45de-b0f6-0c9430824261' ORDER BY "orders"."id" LIMIT 1
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:73
+[0m[33m[0.146ms] [34;1m[rows:0][0m INSERT INTO "users" ("phone_number","full_name","role","nik_hash","profile_photo","ktp_photo_ref","status","verified_by","verified_at","rt_rw","kelurahan_id","created_at","updated_at","id") VALUES ('08210006318','Pengguna','consumer',NULL,NULL,NULL,'active',NULL,NULL,NULL,NULL,'2026-05-18 16:25:18.798','2026-05-18 16:25:18.798','8e04852d-fa49-44d8-b9c5-666ad89a23c8') ON CONFLICT DO NOTHING RETURNING "id"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:73
+[0m[33m[0.087ms] [34;1m[rows:0][0m INSERT INTO "skill_categories" ("name","icon_url","description","id") VALUES ('AC/Kulkas','/icons/cooling.png','Servis dan perbaikan AC dan kulkas',6) ON CONFLICT DO NOTHING RETURNING "id"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:73
+[0m[33m[0.246ms] [34;1m[rows:2][0m INSERT INTO "order_status_logs" ("order_id","from_status","to_status","changed_by","change_time","note","id") VALUES ('1e578073-f6c9-45de-b0f6-0c9430824261',NULL,'pending_match','8e04852d-fa49-44d8-b9c5-666ad89a23c8','2026-05-18 16:25:19.014',NULL,'558eae7d-f15f-4364-951d-5eafbf81390d'),('1e578073-f6c9-45de-b0f6-0c9430824261','pending_match','offered',NULL,'2026-05-18 16:25:19.017',NULL,'b9016008-e3c3-4f77-add4-92ad4f6784a2') ON CONFLICT ("id") DO UPDATE SET "order_id"="excluded"."order_id" RETURNING "id"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:73
+[0m[33m[0.878ms] [34;1m[rows:1][0m UPDATE "orders" SET "consumer_id"='8e04852d-fa49-44d8-b9c5-666ad89a23c8',"worker_id"='ab86af43-91e3-428b-b2c3-61d98760f1ec',"skill_id"=6,"status"='accepted',"description"='QA order 1779096318',"consumer_location"=ST_GeographyFromText('SRID=4326;POINT(106.800000 -6.200000)'),"consumer_address"='Jl. QA Test',"agreed_rate"=75000,"platform_fee"=2000,"payment_method_fee"='qris',"xendit_invoice_id"='mock_inv_1_1e578073-f6c9-45de-b0f6-0c9430824261',"fee_auth_id"='mock_auth_1_1e578073-f6c9-45de-b0f6-0c9430824261',"payment_status"='authorized',"scheduled_at"=NULL,"started_at"=NULL,"completed_at"=NULL,"cancelled_reason"=NULL,"created_at"='2026-05-18 16:25:19.013' WHERE "id" = '1e578073-f6c9-45de-b0f6-0c9430824261'
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:77
+[0m[33m[0.182ms] [34;1m[rows:1][0m INSERT INTO "order_status_logs" ("order_id","from_status","to_status","changed_by","change_time","note","id") VALUES ('1e578073-f6c9-45de-b0f6-0c9430824261','offered','accepted','ab86af43-91e3-428b-b2c3-61d98760f1ec','2026-05-18 16:25:19.036',NULL,'95ffefcb-2968-4166-b500-a5372d76b925') RETURNING "id"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.094ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE "users"."id" = '8e04852d-fa49-44d8-b9c5-666ad89a23c8'
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.146ms] [34;1m[rows:3][0m SELECT * FROM "order_status_logs" WHERE "order_status_logs"."order_id" = '1e578073-f6c9-45de-b0f6-0c9430824261' ORDER BY change_time asc
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.100ms] [34;1m[rows:1][0m SELECT * FROM "skill_categories" WHERE "skill_categories"."id" = 6
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.110ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE "users"."id" = 'ab86af43-91e3-428b-b2c3-61d98760f1ec'
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.734ms] [34;1m[rows:1][0m SELECT * FROM "orders" WHERE id = '1e578073-f6c9-45de-b0f6-0c9430824261' ORDER BY "orders"."id" LIMIT 1
+[GIN] 2026/05/18 - 16:25:19 | 200 |    4.440547ms |             ::1 | POST     "/api/v1/orders/1e578073-f6c9-45de-b0f6-0c9430824261/accept"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.121ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE "users"."id" = '8e04852d-fa49-44d8-b9c5-666ad89a23c8'
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.175ms] [34;1m[rows:3][0m SELECT * FROM "order_status_logs" WHERE "order_status_logs"."order_id" = '1e578073-f6c9-45de-b0f6-0c9430824261' ORDER BY change_time asc
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.089ms] [34;1m[rows:1][0m SELECT * FROM "skill_categories" WHERE "skill_categories"."id" = 6
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.088ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE "users"."id" = 'ab86af43-91e3-428b-b2c3-61d98760f1ec'
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.892ms] [34;1m[rows:1][0m SELECT * FROM "orders" WHERE id = '1e578073-f6c9-45de-b0f6-0c9430824261' ORDER BY "orders"."id" LIMIT 1
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:73
+[0m[33m[0.154ms] [34;1m[rows:0][0m INSERT INTO "users" ("phone_number","full_name","role","nik_hash","profile_photo","ktp_photo_ref","status","verified_by","verified_at","rt_rw","kelurahan_id","created_at","updated_at","id") VALUES ('08210006318','Pengguna','consumer',NULL,NULL,NULL,'active',NULL,NULL,NULL,NULL,'2026-05-18 16:25:18.798','2026-05-18 16:25:18.798','8e04852d-fa49-44d8-b9c5-666ad89a23c8') ON CONFLICT DO NOTHING RETURNING "id"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:73
+[0m[33m[0.134ms] [34;1m[rows:0][0m INSERT INTO "users" ("phone_number","full_name","role","nik_hash","profile_photo","ktp_photo_ref","status","verified_by","verified_at","rt_rw","kelurahan_id","created_at","updated_at","id") VALUES ('08310006318','Worker QA 1779096318','worker','$2a$10$lorCdEs1Z39JTQEc3ju2Ned3OnQeIqYqm.V.r65a8e/9Vq4VlKeqe','buckets/profiles/83f1a5b1-a8ee-41ee-89a3-a26f3db49e91.txt','buckets/ktp/f9a6f517-709e-4d5f-b017-682e9a2f4076.txt','active','48a8fae6-dddf-4ee0-af68-6e5b93e39cdf','2026-05-18 16:25:18.941','001/002',1,'2026-05-18 16:25:18.942','2026-05-18 16:25:18.942','ab86af43-91e3-428b-b2c3-61d98760f1ec') ON CONFLICT DO NOTHING RETURNING "id"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:73
+[0m[33m[0.090ms] [34;1m[rows:0][0m INSERT INTO "skill_categories" ("name","icon_url","description","id") VALUES ('AC/Kulkas','/icons/cooling.png','Servis dan perbaikan AC dan kulkas',6) ON CONFLICT DO NOTHING RETURNING "id"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:73
+[0m[33m[0.259ms] [34;1m[rows:3][0m INSERT INTO "order_status_logs" ("order_id","from_status","to_status","changed_by","change_time","note","id") VALUES ('1e578073-f6c9-45de-b0f6-0c9430824261',NULL,'pending_match','8e04852d-fa49-44d8-b9c5-666ad89a23c8','2026-05-18 16:25:19.014',NULL,'558eae7d-f15f-4364-951d-5eafbf81390d'),('1e578073-f6c9-45de-b0f6-0c9430824261','pending_match','offered',NULL,'2026-05-18 16:25:19.017',NULL,'b9016008-e3c3-4f77-add4-92ad4f6784a2'),('1e578073-f6c9-45de-b0f6-0c9430824261','offered','accepted','ab86af43-91e3-428b-b2c3-61d98760f1ec','2026-05-18 16:25:19.036',NULL,'95ffefcb-2968-4166-b500-a5372d76b925') ON CONFLICT ("id") DO UPDATE SET "order_id"="excluded"."order_id" RETURNING "id"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:73
+[0m[33m[0.996ms] [34;1m[rows:1][0m UPDATE "orders" SET "consumer_id"='8e04852d-fa49-44d8-b9c5-666ad89a23c8',"worker_id"='ab86af43-91e3-428b-b2c3-61d98760f1ec',"skill_id"=6,"status"='in_progress',"description"='QA order 1779096318',"consumer_location"=ST_GeographyFromText('SRID=4326;POINT(106.800000 -6.200000)'),"consumer_address"='Jl. QA Test',"agreed_rate"=75000,"platform_fee"=2000,"payment_method_fee"='qris',"xendit_invoice_id"='mock_inv_1_1e578073-f6c9-45de-b0f6-0c9430824261',"fee_auth_id"='mock_auth_1_1e578073-f6c9-45de-b0f6-0c9430824261',"payment_status"='authorized',"scheduled_at"=NULL,"started_at"='2026-05-18 16:25:19.05',"completed_at"=NULL,"cancelled_reason"=NULL,"created_at"='2026-05-18 16:25:19.013' WHERE "id" = '1e578073-f6c9-45de-b0f6-0c9430824261'
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:77
+[0m[33m[0.195ms] [34;1m[rows:1][0m INSERT INTO "order_status_logs" ("order_id","from_status","to_status","changed_by","change_time","note","id") VALUES ('1e578073-f6c9-45de-b0f6-0c9430824261','accepted','in_progress','ab86af43-91e3-428b-b2c3-61d98760f1ec','2026-05-18 16:25:19.051',NULL,'89b25206-4fb0-41f0-a618-5c0a6e62ce6f') RETURNING "id"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.087ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE "users"."id" = '8e04852d-fa49-44d8-b9c5-666ad89a23c8'
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.126ms] [34;1m[rows:4][0m SELECT * FROM "order_status_logs" WHERE "order_status_logs"."order_id" = '1e578073-f6c9-45de-b0f6-0c9430824261' ORDER BY change_time asc
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.074ms] [34;1m[rows:1][0m SELECT * FROM "skill_categories" WHERE "skill_categories"."id" = 6
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.127ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE "users"."id" = 'ab86af43-91e3-428b-b2c3-61d98760f1ec'
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.655ms] [34;1m[rows:1][0m SELECT * FROM "orders" WHERE id = '1e578073-f6c9-45de-b0f6-0c9430824261' ORDER BY "orders"."id" LIMIT 1
+[GIN] 2026/05/18 - 16:25:19 | 200 |    3.439901ms |             ::1 | POST     "/api/v1/orders/1e578073-f6c9-45de-b0f6-0c9430824261/start"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.114ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE "users"."id" = '8e04852d-fa49-44d8-b9c5-666ad89a23c8'
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.208ms] [34;1m[rows:4][0m SELECT * FROM "order_status_logs" WHERE "order_status_logs"."order_id" = '1e578073-f6c9-45de-b0f6-0c9430824261' ORDER BY change_time asc
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.099ms] [34;1m[rows:1][0m SELECT * FROM "skill_categories" WHERE "skill_categories"."id" = 6
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.108ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE "users"."id" = 'ab86af43-91e3-428b-b2c3-61d98760f1ec'
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[1.017ms] [34;1m[rows:1][0m SELECT * FROM "orders" WHERE id = '1e578073-f6c9-45de-b0f6-0c9430824261' ORDER BY "orders"."id" LIMIT 1
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:73
+[0m[33m[0.169ms] [34;1m[rows:0][0m INSERT INTO "users" ("phone_number","full_name","role","nik_hash","profile_photo","ktp_photo_ref","status","verified_by","verified_at","rt_rw","kelurahan_id","created_at","updated_at","id") VALUES ('08210006318','Pengguna','consumer',NULL,NULL,NULL,'active',NULL,NULL,NULL,NULL,'2026-05-18 16:25:18.798','2026-05-18 16:25:18.798','8e04852d-fa49-44d8-b9c5-666ad89a23c8') ON CONFLICT DO NOTHING RETURNING "id"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:73
+[0m[33m[0.155ms] [34;1m[rows:0][0m INSERT INTO "users" ("phone_number","full_name","role","nik_hash","profile_photo","ktp_photo_ref","status","verified_by","verified_at","rt_rw","kelurahan_id","created_at","updated_at","id") VALUES ('08310006318','Worker QA 1779096318','worker','$2a$10$lorCdEs1Z39JTQEc3ju2Ned3OnQeIqYqm.V.r65a8e/9Vq4VlKeqe','buckets/profiles/83f1a5b1-a8ee-41ee-89a3-a26f3db49e91.txt','buckets/ktp/f9a6f517-709e-4d5f-b017-682e9a2f4076.txt','active','48a8fae6-dddf-4ee0-af68-6e5b93e39cdf','2026-05-18 16:25:18.941','001/002',1,'2026-05-18 16:25:18.942','2026-05-18 16:25:18.942','ab86af43-91e3-428b-b2c3-61d98760f1ec') ON CONFLICT DO NOTHING RETURNING "id"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:73
+[0m[33m[0.115ms] [34;1m[rows:0][0m INSERT INTO "skill_categories" ("name","icon_url","description","id") VALUES ('AC/Kulkas','/icons/cooling.png','Servis dan perbaikan AC dan kulkas',6) ON CONFLICT DO NOTHING RETURNING "id"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:73
+[0m[33m[0.292ms] [34;1m[rows:4][0m INSERT INTO "order_status_logs" ("order_id","from_status","to_status","changed_by","change_time","note","id") VALUES ('1e578073-f6c9-45de-b0f6-0c9430824261',NULL,'pending_match','8e04852d-fa49-44d8-b9c5-666ad89a23c8','2026-05-18 16:25:19.014',NULL,'558eae7d-f15f-4364-951d-5eafbf81390d'),('1e578073-f6c9-45de-b0f6-0c9430824261','pending_match','offered',NULL,'2026-05-18 16:25:19.017',NULL,'b9016008-e3c3-4f77-add4-92ad4f6784a2'),('1e578073-f6c9-45de-b0f6-0c9430824261','offered','accepted','ab86af43-91e3-428b-b2c3-61d98760f1ec','2026-05-18 16:25:19.036',NULL,'95ffefcb-2968-4166-b500-a5372d76b925'),('1e578073-f6c9-45de-b0f6-0c9430824261','accepted','in_progress','ab86af43-91e3-428b-b2c3-61d98760f1ec','2026-05-18 16:25:19.051',NULL,'89b25206-4fb0-41f0-a618-5c0a6e62ce6f') ON CONFLICT ("id") DO UPDATE SET "order_id"="excluded"."order_id" RETURNING "id"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:73
+[0m[33m[1.102ms] [34;1m[rows:1][0m UPDATE "orders" SET "consumer_id"='8e04852d-fa49-44d8-b9c5-666ad89a23c8',"worker_id"='ab86af43-91e3-428b-b2c3-61d98760f1ec',"skill_id"=6,"status"='completed',"description"='QA order 1779096318',"consumer_location"=ST_GeographyFromText('SRID=4326;POINT(106.800000 -6.200000)'),"consumer_address"='Jl. QA Test',"agreed_rate"=75000,"platform_fee"=2000,"payment_method_fee"='qris',"xendit_invoice_id"='mock_inv_1_1e578073-f6c9-45de-b0f6-0c9430824261',"fee_auth_id"='mock_auth_1_1e578073-f6c9-45de-b0f6-0c9430824261',"payment_status"='captured',"scheduled_at"=NULL,"started_at"='2026-05-18 16:25:19.05',"completed_at"='2026-05-18 16:25:19.063',"cancelled_reason"=NULL,"created_at"='2026-05-18 16:25:19.013' WHERE "id" = '1e578073-f6c9-45de-b0f6-0c9430824261'
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:77
+[0m[33m[0.197ms] [34;1m[rows:1][0m INSERT INTO "order_status_logs" ("order_id","from_status","to_status","changed_by","change_time","note","id") VALUES ('1e578073-f6c9-45de-b0f6-0c9430824261','in_progress','completed','ab86af43-91e3-428b-b2c3-61d98760f1ec','2026-05-18 16:25:19.064',NULL,'8cfbaf3e-108a-440a-a1c7-392d32e15a4c') RETURNING "id"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:81
+[0m[33m[0.679ms] [34;1m[rows:1][0m INSERT INTO "income_records" ("worker_id","order_id","amount","source","verified","recorded_at","id") VALUES ('ab86af43-91e3-428b-b2c3-61d98760f1ec','1e578073-f6c9-45de-b0f6-0c9430824261',75000,'platform',true,'2026-05-18 16:25:19.065','d15a0f76-1d06-4d52-a3bb-1800607376cc') RETURNING "id"
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.089ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE "users"."id" = '8e04852d-fa49-44d8-b9c5-666ad89a23c8'
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.133ms] [34;1m[rows:5][0m SELECT * FROM "order_status_logs" WHERE "order_status_logs"."order_id" = '1e578073-f6c9-45de-b0f6-0c9430824261' ORDER BY change_time asc
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.103ms] [34;1m[rows:1][0m SELECT * FROM "skill_categories" WHERE "skill_categories"."id" = 6
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.103ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE "users"."id" = 'ab86af43-91e3-428b-b2c3-61d98760f1ec'
+
+2026/05/18 16:25:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.646ms] [34;1m[rows:1][0m SELECT * FROM "orders" WHERE id = '1e578073-f6c9-45de-b0f6-0c9430824261' ORDER BY "orders"."id" LIMIT 1
+[GIN] 2026/05/18 - 16:25:19 | 200 |    5.360609ms |             ::1 | POST     "/api/v1/orders/1e578073-f6c9-45de-b0f6-0c9430824261/complete"
+
+2026/05/18 16:26:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.123ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE "users"."id" = '8e04852d-fa49-44d8-b9c5-666ad89a23c8'
+
+2026/05/18 16:26:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.130ms] [34;1m[rows:5][0m SELECT * FROM "order_status_logs" WHERE "order_status_logs"."order_id" = '1e578073-f6c9-45de-b0f6-0c9430824261' ORDER BY change_time asc
+
+2026/05/18 16:26:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.104ms] [34;1m[rows:1][0m SELECT * FROM "skill_categories" WHERE "skill_categories"."id" = 6
+
+2026/05/18 16:26:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.099ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE "users"."id" = 'ab86af43-91e3-428b-b2c3-61d98760f1ec'
+
+2026/05/18 16:26:19 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/order/repository/postgres.go:39
+[0m[33m[0.980ms] [34;1m[rows:1][0m SELECT * FROM "orders" WHERE id = '1e578073-f6c9-45de-b0f6-0c9430824261' ORDER BY "orders"."id" LIMIT 1
+[GIN] 2026/05/18 - 16:32:55 | 404 |         360ns |             ::1 | GET      "/api/users"
+2026/05/18 16:36:18 sms_mock: OTP for 082100008349 = 362441
+[GIN] 2026/05/18 - 16:36:18 | 204 |     235.217µs |             ::1 | POST     "/api/v1/auth/otp/request"
+[GIN] 2026/05/18 - 16:36:30 | 400 |     203.587µs |             ::1 | POST     "/api/v1/auth/otp/verify"
+2026/05/18 16:36:34 sms_mock: OTP for 082100004871 = 600277
+[GIN] 2026/05/18 - 16:36:34 | 204 |     183.028µs |             ::1 | POST     "/api/v1/auth/otp/request"
+2026/05/18 16:37:54 sms_mock: OTP for 084100004034 = 345182
+[GIN] 2026/05/18 - 16:37:54 | 204 |     211.834µs |             ::1 | POST     "/api/v1/auth/otp/request"
+2026/05/18 16:40:35 sms_mock: OTP for 08219990001 = 312020
+[GIN] 2026/05/18 - 16:40:35 | 204 |     218.947µs |             ::1 | POST     "/api/v1/auth/otp/request"
+
+2026/05/18 16:40:44 [31;1m/home/archlinux/My Works/KerjaDekat/backend/internal/user/repository/postgres.go:42 [35;1mrecord not found
+[0m[33m[0.556ms] [34;1m[rows:0][0m SELECT * FROM "users" WHERE phone_number = '08219990001' ORDER BY "users"."id" LIMIT 1
+
+2026/05/18 16:40:44 [32m/home/archlinux/My Works/KerjaDekat/backend/internal/user/repository/postgres.go:22
+[0m[33m[2.103ms] [34;1m[rows:1][0m INSERT INTO "users" ("phone_number","full_name","role","nik_hash","profile_photo","ktp_photo_ref","status","verified_by","verified_at","rt_rw","kelurahan_id","created_at","updated_at","id") VALUES ('08219990001','Pengguna','consumer',NULL,NULL,NULL,'active',NULL,NULL,NULL,NULL,'2026-05-18 16:40:44.571','2026-05-18 16:40:44.571','6770183a-eb9b-49db-a3c7-91dfe1ee773d') RETURNING "id"
+[GIN] 2026/05/18 - 16:40:44 | 200 |    3.123207ms |             ::1 | POST     "/api/v1/auth/otp/verify"
+signal: killed
