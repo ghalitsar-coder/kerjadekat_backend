@@ -75,6 +75,32 @@ func Mount(r *gin.Engine, d Deps) {
 		c.JSON(http.StatusOK, tokens)
 	})
 
+	v1.POST("/auth/social", func(c *gin.Context) {
+		var body struct {
+			Provider string `json:"provider" binding:"required"`
+			Subject  string `json:"subject" binding:"required"`
+			Email    string `json:"email"`
+			Name     string `json:"name"`
+			Role     string `json:"role"`
+		}
+		if err := c.ShouldBindJSON(&body); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid json"})
+			return
+		}
+		tokens, err := d.Auth.SocialLogin(c.Request.Context(), authusecase.SocialLoginInput{
+			Provider: body.Provider,
+			Subject:  body.Subject,
+			Email:    body.Email,
+			Name:     body.Name,
+			Role:     body.Role,
+		})
+		if err != nil {
+			WriteError(c, err)
+			return
+		}
+		c.JSON(http.StatusOK, tokens)
+	})
+
 	v1.POST("/auth/refresh", func(c *gin.Context) {
 		var body struct {
 			RefreshToken string `json:"refresh_token" binding:"required"`
@@ -288,6 +314,47 @@ func Mount(r *gin.Engine, d Deps) {
 			return
 		}
 		c.JSON(http.StatusOK, ord)
+	})
+
+	authed.GET("/workers/nearby", func(c *gin.Context) {
+		lat, err := strconv.ParseFloat(c.Query("lat"), 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "lat required"})
+			return
+		}
+		lng, err := strconv.ParseFloat(c.Query("lng"), 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "lng required"})
+			return
+		}
+		var radius float64 = 5000
+		if r := c.Query("radius"); r != "" {
+			radius, err = strconv.ParseFloat(r, 64)
+			if err != nil || radius <= 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid radius"})
+				return
+			}
+		}
+		var skillID *int
+		if s := c.Query("skill"); s != "" {
+			id, err := strconv.Atoi(s)
+			if err != nil || id <= 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid skill"})
+				return
+			}
+			skillID = &id
+		}
+		items, err := d.Workers.Nearby(c.Request.Context(), workerusecase.NearbyInput{
+			Latitude:     lat,
+			Longitude:    lng,
+			RadiusMeters: radius,
+			SkillID:      skillID,
+		})
+		if err != nil {
+			WriteError(c, err)
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"items": items})
 	})
 
 	authed.GET("/workers/me", func(c *gin.Context) {

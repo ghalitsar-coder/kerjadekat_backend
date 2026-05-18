@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"strings"
 
 	"kerjadekat/backend/internal/domain"
@@ -136,6 +138,85 @@ func (a *Auth) ensureWorkerProfile(ctx context.Context, userID uuid.UUID) error 
 		Availability: domain.WorkerAvailabilityOffline,
 	}
 	return a.workers.CreateProfile(ctx, p)
+}
+
+type SocialLoginInput struct {
+	Provider  string
+	Subject   string
+	Email     string
+	Name      string
+	Role      string
+}
+
+// SocialLogin issues JWT for OAuth users (Google/GitHub via Auth.js).
+func (a *Auth) SocialLogin(ctx context.Context, in SocialLoginInput) (*TokenPair, error) {
+	provider := strings.TrimSpace(strings.ToLower(in.Provider))
+	subject := strings.TrimSpace(in.Subject)
+	if provider == "" || subject == "" {
+		return nil, domain.ErrInvalidInput
+	}
+	role := in.Role
+	if role == "" {
+		role = domain.RoleConsumer
+	}
+	if err := validateRole(role); err != nil {
+		return nil, err
+	}
+	phone := oauthSyntheticPhone(provider, subject)
+	name := strings.TrimSpace(in.Name)
+	if name == "" {
+		name = "Pengguna"
+	}
+
+	u, err := a.users.FindByPhone(ctx, phone)
+	if err != nil {
+		if err != domain.ErrNotFound {
+			return nil, err
+		}
+		u = &domain.User{
+			ID:          uuid.New(),
+			PhoneNumber: phone,
+			FullName:    name,
+			Role:        role,
+			Status:      domain.UserStatusActive,
+		}
+		if err := a.users.Create(ctx, u); err != nil {
+			return nil, err
+		}
+	} else {
+		if u.Role != role {
+			return nil, domain.ErrForbidden
+		}
+		if u.Status == domain.UserStatusSuspended {
+			return nil, domain.ErrForbidden
+		}
+		if name != "" && u.FullName != name {
+			u.FullName = name
+			_ = a.users.Update(ctx, u)
+		}
+	}
+
+	if role == domain.RoleWorker {
+		if err := a.ensureWorkerProfile(ctx, u.ID); err != nil {
+			return nil, err
+		}
+	}
+
+	access, err := a.tokens.IssueAccess(token.Claims{UserID: u.ID, Role: u.Role})
+	if err != nil {
+		return nil, err
+	}
+	refresh, err := a.tokens.IssueRefresh(token.Claims{UserID: u.ID, Role: u.Role})
+	if err != nil {
+		return nil, err
+	}
+	return &TokenPair{AccessToken: access, RefreshToken: refresh, ExpiresIn: a.tokens.AccessExpiresInSeconds()}, nil
+}
+
+func oauthSyntheticPhone(provider, subject string) string {
+	sum := sha256.Sum256([]byte(provider + ":" + subject))
+	// Unique pseudo-phone (max 15 chars) for OAuth-only accounts.
+	return "o" + hex.EncodeToString(sum[:6])
 }
 
 func (a *Auth) Refresh(ctx context.Context, refreshToken string) (*TokenPair, error) {

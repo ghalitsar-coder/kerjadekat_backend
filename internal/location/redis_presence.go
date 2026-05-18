@@ -124,9 +124,11 @@ func (p *RedisPresence) NearbyWorkerUserIDs(ctx context.Context, skillID int, la
 		if err != nil || avail != domain.WorkerAvailabilityOnline {
 			continue
 		}
-		isMember, err := p.rdb.SIsMember(ctx, skillsKey(uid), skillMember).Result()
-		if err != nil || !isMember {
-			continue
+		if skillID > 0 {
+			isMember, err := p.rdb.SIsMember(ctx, skillsKey(uid), skillMember).Result()
+			if err != nil || !isMember {
+				continue
+			}
 		}
 		out = append(out, uid)
 	}

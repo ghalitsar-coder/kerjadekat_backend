@@ -89,8 +89,8 @@ func main() {
 	redisPub := orderpkg.NewPublisher(rdb)
 	matchPublisher := orderpkg.NewMatchPublisher(redisPub, mqClient)
 
-	pay := payment.NewMockGateway()
-	smsNotifier := sms.NewMockNotifier()
+	pay := payment.NewFromConfig(cfg)
+	smsNotifier := sms.NewMockNotifier(cfg.OTPLogFile)
 	otpStore := otp.NewRedis(rdb, 5*time.Minute)
 	issuer := token.NewIssuer(cfg.JWTSecret, cfg.JWTAccessExpiry, cfg.JWTRefreshExpiry)
 
@@ -110,7 +110,12 @@ func main() {
 			MaxRounds:    cfg.MatchMaxRounds,
 		},
 	)
-	workersUC := workerusecase.NewWorkers(workerRepository, presence)
+	workersUC := workerusecase.NewWorkers(workerRepository, presence, float64(cfg.MatchRadiusMeters))
+	if err := workersUC.BootstrapPresence(ctx); err != nil {
+		log.Printf("worker presence bootstrap: %v", err)
+	} else {
+		log.Println("worker presence bootstrap: synced online workers to Redis")
+	}
 
 	agentRepository := agentrepo.NewAgentPostgres(db)
 	fileStore := storage.NewMock()

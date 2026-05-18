@@ -10,12 +10,16 @@ import (
 )
 
 type Workers struct {
-	repo     domain.WorkerRepository
-	presence domain.WorkerPresence
+	repo            domain.WorkerRepository
+	presence        domain.WorkerPresence
+	defaultRadiusM  float64
 }
 
-func NewWorkers(repo domain.WorkerRepository, presence domain.WorkerPresence) *Workers {
-	return &Workers{repo: repo, presence: presence}
+func NewWorkers(repo domain.WorkerRepository, presence domain.WorkerPresence, defaultRadiusM float64) *Workers {
+	if defaultRadiusM <= 0 {
+		defaultRadiusM = 5000
+	}
+	return &Workers{repo: repo, presence: presence, defaultRadiusM: defaultRadiusM}
 }
 
 func (w *Workers) Me(ctx context.Context, userID uuid.UUID) (*domain.WorkerProfile, error) {

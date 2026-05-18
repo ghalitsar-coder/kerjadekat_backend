@@ -38,6 +38,10 @@ type Config struct {
 	JWTRefreshExpiryDays   int           `mapstructure:"JWT_REFRESH_EXPIRY_DAYS"`
 	JWTAccessExpiry        time.Duration `mapstructure:"-"`
 	JWTRefreshExpiry       time.Duration `mapstructure:"-"`
+
+	XenditAPIKey          string `mapstructure:"XENDIT_API_KEY"`
+	XenditCallbackToken   string `mapstructure:"XENDIT_CALLBACK_TOKEN"`
+	OTPLogFile            string `mapstructure:"OTP_LOG_FILE"`
 }
 
 // Load reads configuration from OS environment variables and, if present, a .env file.
@@ -61,6 +65,7 @@ func Load(envFileDir string) (*Config, error) {
 	v.SetDefault("MATCH_MAX_ROUNDS", 5)
 	v.SetDefault("JWT_ACCESS_EXPIRY_MINUTES", 15)
 	v.SetDefault("JWT_REFRESH_EXPIRY_DAYS", 7)
+	v.SetDefault("OTP_LOG_FILE", "tmp/otp.log")
 
 	// Unmarshal only sees keys present in Viper; bind env vars explicitly so
 	// OS environment works even when no .env file is used.
@@ -84,6 +89,9 @@ func Load(envFileDir string) (*Config, error) {
 		"JWT_SECRET",
 		"JWT_ACCESS_EXPIRY_MINUTES",
 		"JWT_REFRESH_EXPIRY_DAYS",
+		"XENDIT_API_KEY",
+		"XENDIT_CALLBACK_TOKEN",
+		"OTP_LOG_FILE",
 	}
 	for _, k := range envKeys {
 		if err := v.BindEnv(k); err != nil {
