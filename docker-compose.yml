@@ -1,6 +1,31 @@
-version: '3.8'
+# Baris 'version' sudah dihapus agar tidak muncul warning "obsolete" lagi
 
 services:
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: kerjadekat_backend
+    ports:
+      - "8080:8080"
+    # 1. Baca SEMUA konfigurasi dari file .env (JWT, OAuth, Xendit, dll)
+    env_file:
+      - .env
+    # 2. Timpa (override) HANYA untuk koneksi antar-container
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432 # Gunakan port default internal postgres, bukan 54325
+      - REDIS_HOST=redis
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - kerjadekat_network
   postgres:
     image: postgis/postgis:17-3.5
     container_name: kerjadekat_postgres
@@ -45,7 +70,9 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
     entrypoint: >
       sh -c "
-      wget -P /plugins https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/v3.13.0/rabbitmq_delayed_message_exchange-3.13.0.ez &&
+      if [ ! -f /plugins/rabbitmq_delayed_message_exchange-3.13.0.ez ]; then
+        wget -P /plugins https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/v3.13.0/rabbitmq_delayed_message_exchange-3.13.0.ez;
+      fi &&
       rabbitmq-plugins enable rabbitmq_delayed_message_exchange &&
       exec docker-entrypoint.sh rabbitmq-server
       "

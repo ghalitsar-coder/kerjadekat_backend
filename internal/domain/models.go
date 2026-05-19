@@ -19,7 +19,11 @@ type Kelurahan struct {
 // User maps users (all roles). Schema has no soft-delete column.
 type User struct {
 	ID            uuid.UUID  `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
-	PhoneNumber   string     `gorm:"type:varchar(15);uniqueIndex:idx_users_phone;not null"`
+	PhoneNumber   *string    `gorm:"type:varchar(15);uniqueIndex:idx_users_phone"`
+	Email         *string    `gorm:"type:varchar(100);uniqueIndex:idx_users_email"`
+	Password      *string    `gorm:"type:varchar(255)"`
+	Provider      *string    `gorm:"type:varchar(20);uniqueIndex:idx_users_provider"`
+	ProviderID    *string    `gorm:"type:varchar(100);uniqueIndex:idx_users_provider"`
 	FullName      string     `gorm:"type:varchar(100);not null"`
 	Role          string     `gorm:"type:varchar(20);index:idx_users_role;not null"`
 	NikHash       *string    `gorm:"type:varchar(64);uniqueIndex"`

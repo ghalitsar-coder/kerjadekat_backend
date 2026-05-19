@@ -48,4 +48,26 @@ func (r *UserPostgres) FindByPhone(ctx context.Context, phone string) (*domain.U
 	return &u, nil
 }
 
+func (r *UserPostgres) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
+	var u domain.User
+	if err := r.db.WithContext(ctx).First(&u, "email = ?", email).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, domain.ErrNotFound
+		}
+		return nil, err
+	}
+	return &u, nil
+}
+
+func (r *UserPostgres) FindByProviderID(ctx context.Context, provider, providerID string) (*domain.User, error) {
+	var u domain.User
+	if err := r.db.WithContext(ctx).First(&u, "provider = ? AND provider_id = ?", provider, providerID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, domain.ErrNotFound
+		}
+		return nil, err
+	}
+	return &u, nil
+}
+
 var _ domain.UserRepository = (*UserPostgres)(nil)

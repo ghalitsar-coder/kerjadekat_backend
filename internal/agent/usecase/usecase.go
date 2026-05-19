@@ -149,7 +149,7 @@ func (a *Agents) RegisterWorker(ctx context.Context, in RegisterWorkerInput) (*R
 
 	user := &domain.User{
 		ID:           userID,
-		PhoneNumber:  phone,
+		PhoneNumber:  &phone,
 		FullName:     name,
 		Role:         domain.RoleWorker,
 		NikHash:      &hashStr,

@@ -57,6 +57,48 @@ func Mount(r *gin.Engine, d Deps) {
 		c.Status(http.StatusNoContent)
 	})
 
+	v1.POST("/auth/register", func(c *gin.Context) {
+		var body struct {
+			Email       string `json:"email" binding:"required"`
+			Password    string `json:"password" binding:"required"`
+			Name        string `json:"name" binding:"required"`
+			PhoneNumber string `json:"phone_number" binding:"required"`
+			Role        string `json:"role"`
+		}
+		if err := c.ShouldBindJSON(&body); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid json"})
+			return
+		}
+		if err := d.Auth.RegisterEmail(c.Request.Context(), body.Email, body.Password, body.Name, body.PhoneNumber, body.Role); err != nil {
+			WriteError(c, err)
+			return
+		}
+		// Directly send OTP? The frontend will call /auth/login and then /auth/otp/request
+		c.JSON(http.StatusCreated, gin.H{"message": "created"})
+	})
+
+	v1.POST("/auth/login", func(c *gin.Context) {
+		var body struct {
+			Email    string `json:"email" binding:"required"`
+			Password string `json:"password" binding:"required"`
+		}
+		if err := c.ShouldBindJSON(&body); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid json"})
+			return
+		}
+		u, err := d.Auth.LoginEmail(c.Request.Context(), body.Email, body.Password)
+		if err != nil {
+			WriteError(c, err)
+			return
+		}
+		if u.PhoneNumber == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "user has no phone number, cannot 2FA"})
+			return
+		}
+		// Return phone number so frontend can request OTP
+		c.JSON(http.StatusOK, gin.H{"phone_number": *u.PhoneNumber, "role": u.Role})
+	})
+
 	v1.POST("/auth/otp/verify", func(c *gin.Context) {
 		var body struct {
 			PhoneNumber string `json:"phone_number" binding:"required"`

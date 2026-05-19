@@ -2,8 +2,7 @@ package usecase
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
+	"errors"
 	"strings"
 
 	"kerjadekat/backend/internal/domain"
@@ -11,6 +10,7 @@ import (
 	"kerjadekat/backend/pkg/token"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Auth struct {
@@ -80,32 +80,22 @@ func (a *Auth) VerifyOTP(ctx context.Context, phone, code, role string) (*TokenP
 
 	u, err := a.users.FindByPhone(ctx, phone)
 	if err != nil {
-		if err != domain.ErrNotFound {
+		if err == domain.ErrNotFound {
+			return nil, errors.New("user not found. please register first")
+		}
+		return nil, err
+	}
+
+	if u.Role != role {
+		return nil, domain.ErrForbidden
+	}
+	if u.Status == domain.UserStatusSuspended {
+		return nil, domain.ErrForbidden
+	}
+	if u.Status == domain.UserStatusPending {
+		u.Status = domain.UserStatusActive
+		if err := a.users.Update(ctx, u); err != nil {
 			return nil, err
-		}
-		name := "Pengguna"
-		u = &domain.User{
-			ID:          uuid.New(),
-			PhoneNumber: phone,
-			FullName:    name,
-			Role:        role,
-			Status:      domain.UserStatusActive,
-		}
-		if err := a.users.Create(ctx, u); err != nil {
-			return nil, err
-		}
-	} else {
-		if u.Role != role {
-			return nil, domain.ErrForbidden
-		}
-		if u.Status == domain.UserStatusSuspended {
-			return nil, domain.ErrForbidden
-		}
-		if u.Status == domain.UserStatusPending {
-			u.Status = domain.UserStatusActive
-			if err := a.users.Update(ctx, u); err != nil {
-				return nil, err
-			}
 		}
 	}
 
@@ -162,26 +152,44 @@ func (a *Auth) SocialLogin(ctx context.Context, in SocialLoginInput) (*TokenPair
 	if err := validateRole(role); err != nil {
 		return nil, err
 	}
-	phone := oauthSyntheticPhone(provider, subject)
+	email := strings.TrimSpace(strings.ToLower(in.Email))
 	name := strings.TrimSpace(in.Name)
 	if name == "" {
 		name = "Pengguna"
 	}
 
-	u, err := a.users.FindByPhone(ctx, phone)
+	u, err := a.users.FindByProviderID(ctx, provider, subject)
 	if err != nil {
 		if err != domain.ErrNotFound {
 			return nil, err
 		}
-		u = &domain.User{
-			ID:          uuid.New(),
-			PhoneNumber: phone,
-			FullName:    name,
-			Role:        role,
-			Status:      domain.UserStatusActive,
+		if email != "" {
+			u, err = a.users.FindByEmail(ctx, email)
+			if err != nil && err != domain.ErrNotFound {
+				return nil, err
+			}
 		}
-		if err := a.users.Create(ctx, u); err != nil {
-			return nil, err
+		if u == nil {
+			u = &domain.User{
+				ID:         uuid.New(),
+				FullName:   name,
+				Role:       role,
+				Provider:   &provider,
+				ProviderID: &subject,
+				Status:     domain.UserStatusActive,
+			}
+			if email != "" {
+				u.Email = &email
+			}
+			if err := a.users.Create(ctx, u); err != nil {
+				return nil, err
+			}
+		} else {
+			u.Provider = &provider
+			u.ProviderID = &subject
+			if err := a.users.Update(ctx, u); err != nil {
+				return nil, err
+			}
 		}
 	} else {
 		if u.Role != role {
@@ -213,12 +221,6 @@ func (a *Auth) SocialLogin(ctx context.Context, in SocialLoginInput) (*TokenPair
 	return &TokenPair{AccessToken: access, RefreshToken: refresh, ExpiresIn: a.tokens.AccessExpiresInSeconds()}, nil
 }
 
-func oauthSyntheticPhone(provider, subject string) string {
-	sum := sha256.Sum256([]byte(provider + ":" + subject))
-	// Unique pseudo-phone (max 15 chars) for OAuth-only accounts.
-	return "o" + hex.EncodeToString(sum[:6])
-}
-
 func (a *Auth) Refresh(ctx context.Context, refreshToken string) (*TokenPair, error) {
 	_ = ctx
 	c, err := a.tokens.ParseRefresh(refreshToken)
@@ -234,4 +236,70 @@ func (a *Auth) Refresh(ctx context.Context, refreshToken string) (*TokenPair, er
 		return nil, err
 	}
 	return &TokenPair{AccessToken: access, RefreshToken: newRefresh, ExpiresIn: a.tokens.AccessExpiresInSeconds()}, nil
+}
+
+func (a *Auth) RegisterEmail(ctx context.Context, email, password, name, phone, role string) error {
+	email = strings.TrimSpace(strings.ToLower(email))
+	if email == "" || password == "" {
+		return domain.ErrInvalidInput
+	}
+	if role == "" {
+		role = domain.RoleConsumer
+	}
+	if err := validateRole(role); err != nil {
+		return err
+	}
+	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	hashStr := string(hashed)
+
+	phone = normalizePhone(phone)
+	if phone == "" {
+		return errors.New("phone number is required for 2FA")
+	}
+
+	_, err = a.users.FindByEmail(ctx, email)
+	if err == nil {
+		return domain.ErrConflict
+	}
+	_, err = a.users.FindByPhone(ctx, phone)
+	if err == nil {
+		return domain.ErrConflict
+	}
+
+	u := &domain.User{
+		ID:          uuid.New(),
+		Email:       &email,
+		Password:    &hashStr,
+		PhoneNumber: &phone,
+		FullName:    name,
+		Role:        role,
+		Status:      domain.UserStatusActive,
+	}
+
+	if err := a.users.Create(ctx, u); err != nil {
+		return err
+	}
+
+	if role == domain.RoleWorker {
+		return a.ensureWorkerProfile(ctx, u.ID)
+	}
+	return nil
+}
+
+func (a *Auth) LoginEmail(ctx context.Context, email, password string) (*domain.User, error) {
+	email = strings.TrimSpace(strings.ToLower(email))
+	u, err := a.users.FindByEmail(ctx, email)
+	if err != nil {
+		return nil, domain.ErrNotFound
+	}
+	if u.Password == nil {
+		return nil, domain.ErrUnauthorized
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(*u.Password), []byte(password)); err != nil {
+		return nil, domain.ErrUnauthorized
+	}
+	return u, nil
 }
