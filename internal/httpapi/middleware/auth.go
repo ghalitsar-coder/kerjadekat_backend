@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
@@ -22,6 +23,7 @@ func JWTAuth(issuer *token.Issuer) gin.HandlerFunc {
 		raw := strings.TrimSpace(parts[1])
 		claims, err := issuer.ParseAccess(raw)
 		if err != nil {
+			log.Printf("jwt error: %v", err)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 			return
 		}
