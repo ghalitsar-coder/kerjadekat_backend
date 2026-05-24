@@ -71,6 +71,61 @@ type RegisterWorkerResult struct {
 	OCRPreview    OCRPreview           `json:"ocr_preview"`
 }
 
+type AgentWorkerSummary struct {
+	UserID        uuid.UUID  `json:"user_id"`
+	FullName      string     `json:"full_name"`
+	PhoneNumber   *string    `json:"phone_number"`
+	Status        string     `json:"status"`
+	Availability  string     `json:"availability"`
+	KelurahanName string     `json:"kelurahan"`
+	RtRw          *string    `json:"rt_rw"`
+	RatingAvg     float64    `json:"rating_avg"`
+	RatingCount   int        `json:"rating_count"`
+	CreatedAt     time.Time  `json:"created_at"`
+	VerifiedAt    *time.Time `json:"verified_at"`
+	Skills        []string   `json:"skills"`
+}
+
+type ListAgentWorkersResult struct {
+	Items []AgentWorkerSummary `json:"items"`
+}
+
+func (a *Agents) ListWorkers(ctx context.Context, agentID uuid.UUID) (*ListAgentWorkersResult, error) {
+	rows, err := a.agents.ListWorkersByAgentTerritory(ctx, agentID)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]AgentWorkerSummary, 0, len(rows))
+	for _, row := range rows {
+		user := row.User
+		kelName := ""
+		if user.Kelurahan != nil {
+			kelName = user.Kelurahan.Name
+		}
+		skills := make([]string, 0, len(row.Skills))
+		for _, s := range row.Skills {
+			if s.Skill.Name != "" {
+				skills = append(skills, s.Skill.Name)
+			}
+		}
+		items = append(items, AgentWorkerSummary{
+			UserID:        user.ID,
+			FullName:      user.FullName,
+			PhoneNumber:   user.PhoneNumber,
+			Status:        user.Status,
+			Availability:  row.Availability,
+			KelurahanName: kelName,
+			RtRw:          user.RtRw,
+			RatingAvg:     row.RatingAvg,
+			RatingCount:   row.RatingCount,
+			CreatedAt:     user.CreatedAt,
+			VerifiedAt:    user.VerifiedAt,
+			Skills:        skills,
+		})
+	}
+	return &ListAgentWorkersResult{Items: items}, nil
+}
+
 func (a *Agents) RegisterWorker(ctx context.Context, in RegisterWorkerInput) (*RegisterWorkerResult, error) {
 	phone := strings.TrimSpace(in.PhoneNumber)
 	name := strings.TrimSpace(in.FullName)

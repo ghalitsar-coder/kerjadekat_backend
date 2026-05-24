@@ -10,12 +10,14 @@ import (
     "time"
 
     "kerjadekat/backend/config"
-    "kerjadekat/backend/internal/domain"
+    // "kerjadekat/backend/internal/domain"
     agenthttp "kerjadekat/backend/internal/agent/delivery/http"
     agentrepo "kerjadekat/backend/internal/agent/repository"
     agentusecase "kerjadekat/backend/internal/agent/usecase"
     authusecase "kerjadekat/backend/internal/auth/usecase"
     "kerjadekat/backend/internal/httpapi"
+    kelurahanrepo "kerjadekat/backend/internal/kelurahan/repository"
+    kelurahanusecase "kerjadekat/backend/internal/kelurahan/usecase"
     "kerjadekat/backend/internal/location"
     orderpkg "kerjadekat/backend/internal/order"
     "kerjadekat/backend/internal/order/delivery/ws"
@@ -64,9 +66,6 @@ func main() {
         log.Fatalf("database: %v", err)
     }
 
-    if err := db.AutoMigrate(&domain.User{}); err != nil {
-        log.Printf("auto migrate user: %v", err)
-    }
 
     rdb := redisx.NewClient(cfg)
     if err := redisx.Ping(ctx, rdb); err != nil {
@@ -82,6 +81,7 @@ func main() {
     workerRepository := workerrepo.NewWorkerPostgres(db)
     orderRepository := orderrepo.NewOrderPostgres(db)
     skillRepository := skillrepo.NewSkillPostgres(db)
+    kelurahanRepository := kelurahanrepo.NewKelurahanPostgres(db)
 
     locationTTL := time.Duration(cfg.WorkerLocationTTLMinutes) * time.Minute
     presence := location.NewRedisPresence(rdb, locationTTL)
@@ -103,6 +103,7 @@ func main() {
     authUC := authusecase.NewAuth(userRepository, workerRepository, otpStore, smsNotifier, issuer)
     usersUC := userusecase.NewUsers(userRepository)
     skillsUC := skillusecase.NewSkills(skillRepository)
+    kelurahansUC := kelurahanusecase.NewKelurahans(kelurahanRepository)
     ordersUC := orderusecase.NewOrders(
         orderRepository,
         skillRepository,
@@ -142,14 +143,15 @@ func main() {
     r.SetTrustedProxies(nil)
     r.Use(gin.Logger(), gin.Recovery())
     httpapi.Mount(r, httpapi.Deps{
-        Auth:    authUC,
-        Users:   usersUC,
-        Skills:  skillsUC,
-        Orders:  ordersUC,
-        Workers: workersUC,
-        Agents:  agentHandler,
-        Tokens:  issuer,
-        WSHub:   wsHub,
+        Auth:       authUC,
+        Users:      usersUC,
+        Skills:     skillsUC,
+        Kelurahans: kelurahansUC,
+        Orders:     ordersUC,
+        Workers:    workersUC,
+        Agents:     agentHandler,
+        Tokens:     issuer,
+        WSHub:      wsHub,
     })
 
     addr := ":" + cfg.ServerPort

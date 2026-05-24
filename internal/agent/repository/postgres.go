@@ -86,4 +86,21 @@ func (r *AgentPostgres) FindWorkerByUserID(ctx context.Context, userID uuid.UUID
 	return &p, nil
 }
 
+func (r *AgentPostgres) ListWorkersByAgentTerritory(ctx context.Context, agentID uuid.UUID) ([]domain.WorkerProfile, error) {
+	var rows []domain.WorkerProfile
+	err := r.db.WithContext(ctx).
+		Joins("JOIN users ON users.id = worker_profiles.user_id").
+		Joins("JOIN agent_territories at ON at.kelurahan_id = users.kelurahan_id").
+		Where("at.agent_id = ?", agentID).
+		Preload("User").
+		Preload("User.Kelurahan").
+		Preload("Skills.Skill").
+		Order("users.created_at desc").
+		Find(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
 var _ domain.AgentRepository = (*AgentPostgres)(nil)

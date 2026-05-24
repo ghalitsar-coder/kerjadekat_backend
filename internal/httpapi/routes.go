@@ -8,6 +8,7 @@ import (
 	agenthttp "kerjadekat/backend/internal/agent/delivery/http"
 	"kerjadekat/backend/internal/domain"
 	"kerjadekat/backend/internal/httpapi/middleware"
+	kelurahanuc "kerjadekat/backend/internal/kelurahan/usecase"
 	"kerjadekat/backend/internal/order/delivery/ws"
 	orderusecase "kerjadekat/backend/internal/order/usecase"
 	skillusecase "kerjadekat/backend/internal/skill/usecase"
@@ -21,14 +22,15 @@ import (
 
 // Deps wires HTTP delivery to application use cases.
 type Deps struct {
-	Auth    *authusecase.Auth
-	Users   *userusecase.Users
-	Skills  *skillusecase.Skills
-	Orders  *orderusecase.Orders
-	Workers *workerusecase.Workers
-	Agents  *agenthttp.Handler
-	Tokens  *token.Issuer
-	WSHub   *ws.Hub
+	Auth       *authusecase.Auth
+	Users      *userusecase.Users
+	Skills     *skillusecase.Skills
+	Kelurahans *kelurahanuc.Kelurahans
+	Orders     *orderusecase.Orders
+	Workers    *workerusecase.Workers
+	Agents     *agenthttp.Handler
+	Tokens     *token.Issuer
+	WSHub      *ws.Hub
 }
 
 func Mount(r *gin.Engine, d Deps) {
@@ -164,6 +166,7 @@ func Mount(r *gin.Engine, d Deps) {
 	if d.Agents != nil {
 		agentRoutes := authed.Group("/agent", middleware.RequireRoles(domain.RoleAgent, domain.RoleAdmin))
 		agentRoutes.GET("/territories", d.Agents.ListTerritories)
+		agentRoutes.GET("/workers", d.Agents.ListWorkers)
 		agentRoutes.POST("/workers", d.Agents.RegisterWorker)
 	}
 
@@ -183,6 +186,15 @@ func Mount(r *gin.Engine, d Deps) {
 
 	authed.GET("/skill-categories", func(c *gin.Context) {
 		rows, err := d.Skills.ListCategories(c.Request.Context())
+		if err != nil {
+			WriteError(c, err)
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"items": rows})
+	})
+
+	authed.GET("/kelurahans", func(c *gin.Context) {
+		rows, err := d.Kelurahans.ListAll(c.Request.Context())
 		if err != nil {
 			WriteError(c, err)
 			return

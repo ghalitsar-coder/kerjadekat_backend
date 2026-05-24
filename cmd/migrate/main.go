@@ -19,9 +19,21 @@ func main() {
 	}
 
 	log.Println("Running AutoMigrate for User schema...")
-	if err := db.AutoMigrate(&domain.User{}); err != nil {
-		log.Fatalf("AutoMigrate Error: %v", err)
-	}
+	// Hapus kode AutoMigrate yang lama dan ganti dengan ini:
+    if err := db.AutoMigrate(
+        &domain.Kelurahan{},
+        &domain.SkillCategory{},
+        &domain.User{},
+        &domain.WorkerProfile{},
+        &domain.WorkerSkill{},
+        &domain.AgentTerritory{},
+        &domain.Order{},
+        &domain.OrderStatusLog{},
+        &domain.OrderRating{},
+        &domain.IncomeRecord{},
+    ); err != nil {
+        log.Printf("Gagal melakukan migrasi database: %v", err)
+    }
 	
 	log.Println("Database migration completed successfully!")
 }

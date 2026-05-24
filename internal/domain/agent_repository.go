@@ -17,6 +17,7 @@ type RegisterWorkerParams struct {
 type AgentRepository interface {
 	RegisterWorker(ctx context.Context, p RegisterWorkerParams) error
 	FindWorkerByUserID(ctx context.Context, userID uuid.UUID) (*WorkerProfile, error)
+	ListWorkersByAgentTerritory(ctx context.Context, agentID uuid.UUID) ([]WorkerProfile, error)
 	KelurahanExists(ctx context.Context, id int) (bool, error)
 	AgentHasTerritory(ctx context.Context, agentID uuid.UUID, kelurahanID int) (bool, error)
 	ListAgentTerritories(ctx context.Context, agentID uuid.UUID) ([]Kelurahan, error)

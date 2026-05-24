@@ -37,6 +37,19 @@ func (h *Handler) ListTerritories(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"items": rows})
 }
 
+func (h *Handler) ListWorkers(c *gin.Context) {
+	cl := middleware.MustClaims(c)
+	result, err := h.agents.ListWorkers(c.Request.Context(), cl.UserID)
+	if err != nil {
+		httpx.WriteError(c, err)
+		return
+	}
+	if result == nil {
+		result = &agentusecase.ListAgentWorkersResult{Items: []agentusecase.AgentWorkerSummary{}}
+	}
+	c.JSON(http.StatusOK, result)
+}
+
 func (h *Handler) RegisterWorker(c *gin.Context) {
 	cl := middleware.MustClaims(c)
 
