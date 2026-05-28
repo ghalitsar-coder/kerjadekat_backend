@@ -1,35 +1,38 @@
 pipeline {
     agent any
-
     environment {
-        // Karena Jenkins di Docker, dockerhub user diambil dari env
         DOCKERHUB_USER = "ghalitsar"
         IMAGE_NAME = "kerjadekat-backend"
     }
-
     stages {
-        stage('Test CI') {
+        stage('Checkout') {
             steps {
-                echo "Hello from Backend Pipeline!"
-                sh "echo 'Testing backend changes...'"
+                sh '''
+                # Clean workspace
+                rm -rf *
+                git clone https://github.com/ghalitsar-coder/kerjadekat_backend.git .
+                git rev-parse --short HEAD > git_commit.txt
+                '''
             }
         }
-
-        stage('Build Image') {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    // Ambil short commit hash
-                    def gitCommit = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-                    
-                    // Build image
-                    sh "docker build -t ${DOCKERHUB_USER}/${IMAGE_NAME}:${gitCommit} -t ${DOCKERHUB_USER}/${IMAGE_NAME}:latest ."
+                    def commitHash = readFile('git_commit.txt').trim()
+                    sh "docker build -t ${DOCKERHUB_USER}/${IMAGE_NAME}:${commitHash} -t ${DOCKERHUB_USER}/${IMAGE_NAME}:latest ."
                 }
             }
         }
-        
-        stage('Push Image') {
+        stage('Push to Docker Hub') {
             steps {
-                echo "Skipping push for this test run. The Build stage worked!"
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                    sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
+                    script {
+                        def commitHash = readFile('git_commit.txt').trim()
+                        sh "docker push ${DOCKERHUB_USER}/${IMAGE_NAME}:${commitHash}"
+                        sh "docker push ${DOCKERHUB_USER}/${IMAGE_NAME}:latest"
+                    }
+                }
             }
         }
     }
