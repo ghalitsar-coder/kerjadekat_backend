@@ -10,7 +10,7 @@ import (
     "time"
 
     "kerjadekat/backend/config"
-    // "kerjadekat/backend/internal/domain"
+    "kerjadekat/backend/internal/domain"
     agenthttp "kerjadekat/backend/internal/agent/delivery/http"
     agentrepo "kerjadekat/backend/internal/agent/repository"
     agentusecase "kerjadekat/backend/internal/agent/usecase"
@@ -66,6 +66,21 @@ func main() {
         log.Fatalf("database: %v", err)
     }
 
+    if err := db.AutoMigrate(
+        &domain.Kelurahan{},
+        &domain.SkillCategory{},
+        &domain.User{},
+        &domain.WorkerProfile{},
+        &domain.WorkerSkill{},
+        &domain.AgentTerritory{},
+        &domain.Order{},
+        &domain.OrderStatusLog{},
+        &domain.OrderRating{},
+        &domain.IncomeRecord{},
+    ); err != nil {
+        log.Fatalf("migrate: %v", err)
+    }
+    log.Println("database migration completed")
 
     rdb := redisx.NewClient(cfg)
     if err := redisx.Ping(ctx, rdb); err != nil {
