@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"kerjadekat/backend/internal/domain"
@@ -89,6 +90,52 @@ func canViewOrder(o *domain.Order, actor uuid.UUID, role string) bool {
 		return true
 	}
 	return false
+}
+
+type XenditWebhookPayload struct {
+	Event string `json:"event"`
+	Data  struct {
+		PaymentRequestID string `json:"payment_request_id"`
+		ReferenceID      string `json:"reference_id"`
+		Status           string `json:"status"`
+	} `json:"data"`
+}
+
+func (o *Orders) HandleXenditWebhook(ctx context.Context, p XenditWebhookPayload) error {
+	id := p.Data.PaymentRequestID
+	if id == "" {
+		return fmt.Errorf("missing payment_request_id in webhook")
+	}
+
+	ord, err := o.orders.FindByInvoiceID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	prev := ord.PaymentStatus
+	note := fmt.Sprintf("Xendit v3 webhook: %s (event: %s)", p.Data.Status, p.Event)
+
+	switch p.Data.Status {
+	case "SUCCEEDED":
+		ord.PaymentStatus = domain.PaymentCaptured
+	case "AUTHORIZED":
+		ord.PaymentStatus = domain.PaymentAuthorized
+	case "EXPIRED", "FAILED", "CANCELED":
+		ord.PaymentStatus = domain.PaymentFailed
+	default:
+		return nil
+	}
+
+	if prev == ord.PaymentStatus {
+		return nil // no change needed
+	}
+
+	return o.orders.WithTx(ctx, func(ctx context.Context, r domain.OrderRepository) error {
+		if err := r.Update(ctx, ord); err != nil {
+			return err
+		}
+		return o.appendLog(ctx, r, ord.ID, &prev, ord.Status, nil, &note)
+	})
 }
 
 func (o *Orders) ListMine(ctx context.Context, userID uuid.UUID, role string, limit, offset int) ([]domain.Order, error) {

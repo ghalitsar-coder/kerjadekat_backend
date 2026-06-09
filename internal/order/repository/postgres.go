@@ -45,6 +45,21 @@ func (r *OrderPostgres) FindByID(ctx context.Context, id uuid.UUID) (*domain.Ord
 	return &o, nil
 }
 
+func (r *OrderPostgres) FindByInvoiceID(ctx context.Context, invoiceID string) (*domain.Order, error) {
+	var o domain.Order
+	if err := r.db.WithContext(ctx).
+		Preload("Skill").
+		Preload("Consumer").
+		Preload("Worker").
+		First(&o, "xendit_invoice_id = ?", invoiceID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, domain.ErrNotFound
+		}
+		return nil, err
+	}
+	return &o, nil
+}
+
 func (r *OrderPostgres) ListByConsumer(ctx context.Context, consumerID uuid.UUID, limit, offset int) ([]domain.Order, error) {
 	if limit <= 0 || limit > 100 {
 		limit = 20

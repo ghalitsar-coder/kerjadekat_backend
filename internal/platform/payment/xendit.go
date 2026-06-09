@@ -14,7 +14,7 @@ import (
 
 const xenditAPIBase = "https://api.xendit.co"
 
-// XenditGateway uses Xendit Invoice API for platform-fee holds (production only).
+// XenditGateway uses Xendit Payment Requests API (v3).
 type XenditGateway struct {
 	apiKey        string
 	callbackToken string
@@ -29,30 +29,41 @@ func NewXenditGateway(apiKey, callbackToken string) *XenditGateway {
 	}
 }
 
-type invoiceCreateReq struct {
-	ExternalID  string  `json:"external_id"`
-	Amount      float64 `json:"amount"`
-	Description string  `json:"description"`
-	Currency    string  `json:"currency"`
+type paymentRequestReq struct {
+	ReferenceID   string `json:"reference_id"`
+	RequestAmount float64 `json:"request_amount"`
+	Currency      string `json:"currency"`
+	Country       string `json:"country"`
+	ChannelCode   string `json:"channel_code"`
+	Type          string `json:"type"`
 }
 
-type invoiceCreateRes struct {
-	ID     string `json:"id"`
-	Status string `json:"status"`
+type paymentRequestRes struct {
+	PaymentRequestID string `json:"payment_request_id"`
+	Status           string `json:"status"`
 }
 
 func (x *XenditGateway) Authorize(ctx context.Context, in domain.AuthorizeRequest) (domain.AuthorizeResult, error) {
-	body, _ := json.Marshal(invoiceCreateReq{
-		ExternalID:  in.ReferenceID,
-		Amount:      in.AmountIDR,
-		Description: fmt.Sprintf("KerjaDekat admin fee (%s)", in.Method),
-		Currency:    "IDR",
+	channel := in.Method
+	if channel == "" || channel == "qris" {
+		channel = "QRIS"
+	}
+
+	body, _ := json.Marshal(paymentRequestReq{
+		ReferenceID:   in.ReferenceID,
+		RequestAmount: in.AmountIDR,
+		Currency:      "IDR",
+		Country:       "ID",
+		ChannelCode:   channel,
+		Type:          "PAY",
 	})
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, xenditAPIBase+"/v2/invoices", bytes.NewReader(body))
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, xenditAPIBase+"/v3/payment_requests", bytes.NewReader(body))
 	if err != nil {
 		return domain.AuthorizeResult{}, err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("api-version", "2024-11-11")
 	req.SetBasicAuth(x.apiKey, "")
 
 	res, err := x.http.Do(req)
@@ -64,20 +75,20 @@ func (x *XenditGateway) Authorize(ctx context.Context, in domain.AuthorizeReques
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
 		return domain.AuthorizeResult{}, fmt.Errorf("xendit authorize http %d: %s", res.StatusCode, string(raw))
 	}
-	var inv invoiceCreateRes
-	if err := json.Unmarshal(raw, &inv); err != nil {
+	var pr paymentRequestRes
+	if err := json.Unmarshal(raw, &pr); err != nil {
 		return domain.AuthorizeResult{}, err
 	}
 	return domain.AuthorizeResult{
-		InvoiceID: inv.ID,
-		AuthID:    inv.ID,
+		InvoiceID: pr.PaymentRequestID,
+		AuthID:    pr.PaymentRequestID,
 	}, nil
 }
 
 func (x *XenditGateway) Capture(ctx context.Context, in domain.CaptureRequest) error {
 	_ = ctx
 	_ = in
-	// Invoice flow: capture is implicit when invoice is paid (webhook). No-op for MVP.
+	// Payment Request flow: capture is implicit when paid (webhook).
 	return nil
 }
 
@@ -86,10 +97,12 @@ func (x *XenditGateway) Void(ctx context.Context, in domain.VoidRequest) error {
 		return domain.ErrPaymentFailed
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
-		fmt.Sprintf("%s/v2/invoices/%s/expire!", xenditAPIBase, in.AuthID), nil)
+		fmt.Sprintf("%s/v3/payment_requests/%s/cancel", xenditAPIBase, in.AuthID), bytes.NewReader([]byte("{}")))
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("api-version", "2024-11-11")
 	req.SetBasicAuth(x.apiKey, "")
 	res, err := x.http.Do(req)
 	if err != nil {

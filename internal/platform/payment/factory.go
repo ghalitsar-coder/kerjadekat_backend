@@ -5,9 +5,9 @@ import (
 	"kerjadekat/backend/internal/domain"
 )
 
-// NewFromConfig returns MockGateway in non-production; XenditGateway when ENV=production.
+// NewFromConfig returns XenditGateway if XENDIT_API_KEY is set; MockGateway otherwise.
 func NewFromConfig(cfg *config.Config) domain.PaymentGateway {
-	if cfg.Env == "production" && cfg.XenditAPIKey != "" {
+	if cfg.XenditAPIKey != "" {
 		return NewXenditGateway(cfg.XenditAPIKey, cfg.XenditCallbackToken)
 	}
 	return NewMockGateway()

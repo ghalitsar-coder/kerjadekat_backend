@@ -142,17 +142,18 @@ func main() {
     r := gin.New()
     r.SetTrustedProxies(nil)
     r.Use(gin.Logger(), gin.Recovery())
-    httpapi.Mount(r, httpapi.Deps{
-        Auth:       authUC,
-        Users:      usersUC,
-        Skills:     skillsUC,
-        Kelurahans: kelurahansUC,
-        Orders:     ordersUC,
-        Workers:    workersUC,
-        Agents:     agentHandler,
-        Tokens:     issuer,
-        WSHub:      wsHub,
-    })
+	httpapi.Mount(r, httpapi.Deps{
+		Auth:                authUC,
+		Users:               usersUC,
+		Skills:              skillsUC,
+		Kelurahans:          kelurahansUC,
+		Orders:              ordersUC,
+		Workers:             workersUC,
+		Agents:              agentHandler,
+		Tokens:              issuer,
+		WSHub:               wsHub,
+		XenditCallbackToken: cfg.XenditCallbackToken,
+	})
 
     addr := ":" + cfg.ServerPort
     srv := &http.Server{

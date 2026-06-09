@@ -24,19 +24,45 @@ import (
 
 // Deps wires HTTP delivery to application use cases.
 type Deps struct {
-	Auth       *authusecase.Auth
-	Users      *userusecase.Users
-	Skills     *skillusecase.Skills
-	Kelurahans *kelurahanuc.Kelurahans
-	Orders     *orderusecase.Orders
-	Workers    *workerusecase.Workers
-	Agents     *agenthttp.Handler
-	Tokens     *token.Issuer
-	WSHub      *ws.Hub
+	Auth                *authusecase.Auth
+	Users               *userusecase.Users
+	Skills              *skillusecase.Skills
+	Kelurahans          *kelurahanuc.Kelurahans
+	Orders              *orderusecase.Orders
+	Workers             *workerusecase.Workers
+	Agents              *agenthttp.Handler
+	Tokens              *token.Issuer
+	WSHub               *ws.Hub
+	XenditCallbackToken string
 }
 
 func Mount(r *gin.Engine, d Deps) {
 	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
+
+	// Xendit webhook (public, verified by callback token header)
+	r.POST("/api/v1/webhooks/xendit", func(c *gin.Context) {
+		if d.XenditCallbackToken != "" {
+			incoming := c.GetHeader("x-callback-token")
+			if incoming != d.XenditCallbackToken {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid callback token"})
+				return
+			}
+		}
+		var payload orderusecase.XenditWebhookPayload
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid json"})
+			return
+		}
+		if d.Orders == nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "orders not ready"})
+			return
+		}
+		if err := d.Orders.HandleXenditWebhook(c.Request.Context(), payload); err != nil {
+			WriteError(c, err)
+			return
+		}
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 

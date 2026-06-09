@@ -12,6 +12,7 @@ type OrderRepository interface {
 
 	Create(ctx context.Context, o *Order) error
 	FindByID(ctx context.Context, id uuid.UUID) (*Order, error)
+	FindByInvoiceID(ctx context.Context, invoiceID string) (*Order, error)
 	ListByConsumer(ctx context.Context, consumerID uuid.UUID, limit, offset int) ([]Order, error)
 	ListByWorker(ctx context.Context, workerUserID uuid.UUID, limit, offset int) ([]Order, error)
 	Update(ctx context.Context, o *Order) error
