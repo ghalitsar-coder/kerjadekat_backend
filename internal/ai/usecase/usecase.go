@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -85,6 +86,21 @@ func (s *AIService) DescribeSkill(ctx context.Context, input Input) (*Result, er
 		return nil, fmt.Errorf("ai api error %d: %s", resp.StatusCode, string(respBody))
 	}
 
+	raw := string(respBody)
+
+	// 9router may return SSE streaming even without stream=true.
+	// Strip trailing SSE data: [DONE] or any data: lines after the JSON.
+	if idx := strings.Index(raw, "data: "); idx != -1 {
+		raw = raw[:idx]
+	}
+
+	// Trim whitespace / BOM / leftover
+	raw = strings.TrimSpace(raw)
+
+	if raw == "" {
+		return nil, fmt.Errorf("ai returned empty body")
+	}
+
 	var chatResp struct {
 		Choices []struct {
 			Message struct {
@@ -92,7 +108,8 @@ func (s *AIService) DescribeSkill(ctx context.Context, input Input) (*Result, er
 			} `json:"message"`
 		} `json:"choices"`
 	}
-	if err := json.Unmarshal(respBody, &chatResp); err != nil {
+	if err := json.Unmarshal([]byte(raw), &chatResp); err != nil {
+		log.Printf("[AI] raw response: %s", raw)
 		return nil, fmt.Errorf("parse chat response: %w", err)
 	}
 
