@@ -52,6 +52,10 @@ type Config struct {
 	XenditAPIKey          string `mapstructure:"XENDIT_API_KEY"`
 	XenditCallbackToken   string `mapstructure:"XENDIT_CALLBACK_TOKEN"`
 	OTPLogFile            string `mapstructure:"OTP_LOG_FILE"`
+
+	AIAPIURL  string `mapstructure:"AI_API_URL"`
+	AIModel   string `mapstructure:"AI_MODEL"`
+	AIAPIKey  string `mapstructure:"AI_API_KEY"`
 }
 
 // Load reads configuration from OS environment variables and, if present, a .env file.
@@ -110,6 +114,9 @@ func Load(envFileDir string) (*Config, error) {
 		"S3_USE_SSL",
 		"STORAGE_BACKEND",
 		"CLOUDINARY_URL",
+		"AI_API_URL",
+		"AI_MODEL",
+		"AI_API_KEY",
 		"XENDIT_API_KEY",
 		"XENDIT_CALLBACK_TOKEN",
 		"OTP_LOG_FILE",

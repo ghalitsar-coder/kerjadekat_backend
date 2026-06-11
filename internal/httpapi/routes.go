@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	aiusecase "kerjadekat/backend/internal/ai/usecase"
 	authusecase "kerjadekat/backend/internal/auth/usecase"
 	agenthttp "kerjadekat/backend/internal/agent/delivery/http"
 	"kerjadekat/backend/internal/domain"
@@ -36,6 +37,7 @@ type Deps struct {
 	WSHub               *ws.Hub
 	FileStorage         domain.FileStorage
 	XenditCallbackToken string
+	AI                  *aiusecase.AIService
 }
 
 func Mount(r *gin.Engine, d Deps) {
@@ -225,6 +227,28 @@ func Mount(r *gin.Engine, d Deps) {
 				return
 			}
 			c.Redirect(http.StatusFound, url)
+		})
+	}
+
+	if d.AI != nil {
+		v1.POST("/ai/describe-skill", func(c *gin.Context) {
+			var body struct {
+				Description string              `json:"description" binding:"required"`
+				Categories []aiusecase.Category `json:"categories" binding:"required"`
+			}
+			if err := c.ShouldBindJSON(&body); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid json"})
+				return
+			}
+			result, err := d.AI.DescribeSkill(c.Request.Context(), aiusecase.Input{
+				Description: body.Description,
+				Categories:  body.Categories,
+			})
+			if err != nil {
+				WriteError(c, err)
+				return
+			}
+			c.JSON(http.StatusOK, result)
 		})
 	}
 

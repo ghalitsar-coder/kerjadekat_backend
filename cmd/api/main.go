@@ -11,6 +11,7 @@ import (
 
     "kerjadekat/backend/config"
     "kerjadekat/backend/internal/domain"
+    aiusecase "kerjadekat/backend/internal/ai/usecase"
     agenthttp "kerjadekat/backend/internal/agent/delivery/http"
     agentrepo "kerjadekat/backend/internal/agent/repository"
     agentusecase "kerjadekat/backend/internal/agent/usecase"
@@ -176,6 +177,22 @@ func main() {
     agentsUC := agentusecase.NewAgents(agentRepository, userRepository, skillRepository, fileStore, ocrService)
     agentHandler := agenthttp.NewHandler(agentsUC)
 
+    var aiService *aiusecase.AIService
+    if cfg.AIAPIKey != "" {
+        aiURL := cfg.AIAPIURL
+        if aiURL == "" {
+            aiURL = "https://openrouter.ai/api/v1/chat/completions"
+        }
+        aiModel := cfg.AIModel
+        if aiModel == "" {
+            aiModel = "opencode/deepseek-v4-flash-free"
+        }
+        aiService = aiusecase.NewAIService(aiURL, cfg.AIAPIKey, aiModel)
+        log.Printf("AI service initialized (model: %s)", aiModel)
+    } else {
+        log.Println("AI service disabled (no AI_API_KEY)")
+    }
+
     if err := mqClient.ConsumeMatchTimer(ctx, func(c context.Context, msg mq.MatchTimerMessage) error {
         return ordersUC.HandleMatchTimer(c, msg.OrderID, msg.Round)
     }); err != nil {
@@ -209,6 +226,7 @@ func main() {
 		WSHub:               wsHub,
 		FileStorage:         fileStore,
 		XenditCallbackToken: cfg.XenditCallbackToken,
+		AI:                  aiService,
 	})
 
     addr := ":" + cfg.ServerPort
