@@ -96,6 +96,105 @@ func (w *Workers) Nearby(ctx context.Context, in NearbyInput) ([]NearbyWorkerIte
 	return items, nil
 }
 
+type SkillMatchInput struct {
+	SkillIDs  []int
+	Latitude  float64
+	Longitude float64
+	MaxRadius *float64
+}
+
+func (w *Workers) FindBySkills(ctx context.Context, in SkillMatchInput) ([]NearbyWorkerItem, error) {
+	if len(in.SkillIDs) == 0 {
+		return nil, nil
+	}
+
+	profiles, err := w.repo.FindBySkillIDs(ctx, in.SkillIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	skillSet := make(map[int]bool, len(in.SkillIDs))
+	for _, id := range in.SkillIDs {
+		skillSet[id] = true
+	}
+
+	items := make([]NearbyWorkerItem, 0, len(profiles))
+	for _, p := range profiles {
+		if p.LastLocation == nil || !p.LastLocation.Valid {
+			continue
+		}
+		lat := p.LastLocation.Lat
+		lng := p.LastLocation.Lng
+
+		if in.MaxRadius != nil {
+			d := geo.HaversineM(in.Latitude, in.Longitude, lat, lng)
+			if d > *in.MaxRadius {
+				continue
+			}
+		}
+
+		var matchCount int
+		skills := make([]struct {
+			ID   int    `json:"id"`
+			Name string `json:"name"`
+		}, 0, len(p.Skills))
+		for _, s := range p.Skills {
+			skills = append(skills, struct {
+				ID   int    `json:"id"`
+				Name string `json:"name"`
+			}{ID: s.SkillID, Name: s.Skill.Name})
+			if skillSet[s.SkillID] {
+				matchCount++
+			}
+		}
+
+		items = append(items, NearbyWorkerItem{
+			UserID:       p.UserID,
+			FullName:     p.User.FullName,
+			ProfilePhoto: p.User.ProfilePhoto,
+			Latitude:     lat,
+			Longitude:    lng,
+			DistanceM:    geo.HaversineM(in.Latitude, in.Longitude, lat, lng),
+			RatingAvg:    p.RatingAvg,
+			RatingCount:  p.RatingCount,
+			BaseRate:     p.BaseRate,
+			Availability: p.Availability,
+			VerifiedRT:   p.User.VerifiedAt != nil,
+			Skills:       skills,
+		})
+	}
+
+	sort.Slice(items, func(i, j int) bool {
+		mi := countMatched(items[i].Skills, in.SkillIDs)
+		mj := countMatched(items[j].Skills, in.SkillIDs)
+		if mi != mj {
+			return mi > mj
+		}
+		if items[i].RatingAvg != items[j].RatingAvg {
+			return items[i].RatingAvg > items[j].RatingAvg
+		}
+		return items[i].DistanceM < items[j].DistanceM
+	})
+	return items, nil
+}
+
+func countMatched(skills []struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}, skillIDs []int) int {
+	set := make(map[int]bool, len(skillIDs))
+	for _, id := range skillIDs {
+		set[id] = true
+	}
+	var n int
+	for _, s := range skills {
+		if set[s.ID] {
+			n++
+		}
+	}
+	return n
+}
+
 // BootstrapPresence loads online workers from PostgreSQL into Redis GEO for matching.
 func (w *Workers) BootstrapPresence(ctx context.Context) error {
 	profiles, err := w.repo.ListOnlineWithLocation(ctx)

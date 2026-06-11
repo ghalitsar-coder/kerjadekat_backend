@@ -573,6 +573,55 @@ func Mount(r *gin.Engine, d Deps) {
 		c.JSON(http.StatusOK, gin.H{"items": items})
 	})
 
+	if d.AI != nil {
+		authed.POST("/ai/find-workers", func(c *gin.Context) {
+			_, ok := middleware.Claims(c)
+			if !ok {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "missing claims"})
+				return
+			}
+			var body struct {
+				Description string              `json:"description" binding:"required"`
+				Categories  []aiusecase.Category `json:"categories" binding:"required"`
+				Latitude    *float64             `json:"latitude"`
+				Longitude   *float64             `json:"longitude"`
+			}
+			if err := c.ShouldBindJSON(&body); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid json"})
+				return
+			}
+			// Step 1: AI identifies skill IDs from description
+			aiResult, err := d.AI.FindWorkers(c.Request.Context(), aiusecase.FindWorkersInput{
+				Description: body.Description,
+				Categories:  body.Categories,
+			})
+			if err != nil {
+				WriteError(c, err)
+				return
+			}
+			if len(aiResult.SkillIDs) == 0 {
+				c.JSON(http.StatusOK, gin.H{"items": []workerusecase.NearbyWorkerItem{}, "reasoning": aiResult.Reasoning})
+				return
+			}
+			// Step 2: Find workers matching those skill IDs
+			var lat, lng float64
+			if body.Latitude != nil && body.Longitude != nil {
+				lat = *body.Latitude
+				lng = *body.Longitude
+			}
+			workers, err := d.Workers.FindBySkills(c.Request.Context(), workerusecase.SkillMatchInput{
+				SkillIDs:  aiResult.SkillIDs,
+				Latitude:  lat,
+				Longitude: lng,
+			})
+			if err != nil {
+				WriteError(c, err)
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{"items": workers, "reasoning": aiResult.Reasoning, "skill_ids": aiResult.SkillIDs})
+		})
+	}
+
 	authed.GET("/workers/nearby", func(c *gin.Context) {
 		lat, err := strconv.ParseFloat(c.Query("lat"), 64)
 		if err != nil {

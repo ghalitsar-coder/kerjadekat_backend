@@ -80,4 +80,31 @@ func (r *WorkerPostgres) FindNearbyOnline(ctx context.Context, lat, lng, radiusM
 	return out, nil
 }
 
+func (r *WorkerPostgres) FindBySkillIDs(ctx context.Context, skillIDs []int) ([]domain.WorkerProfile, error) {
+	if len(skillIDs) == 0 {
+		return nil, nil
+	}
+	var rows []domain.WorkerProfile
+	err := r.db.WithContext(ctx).
+		Preload("User").
+		Preload("Skills.Skill").
+		Joins("JOIN worker_skills ON worker_skills.worker_id = worker_profiles.id").
+		Where("worker_profiles.availability = ?", domain.WorkerAvailabilityOnline).
+		Where("worker_skills.skill_id IN ?", skillIDs).
+		Find(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	seen := make(map[uuid.UUID]struct{}, len(rows))
+	out := make([]domain.WorkerProfile, 0, len(rows))
+	for _, row := range rows {
+		if _, ok := seen[row.ID]; ok {
+			continue
+		}
+		seen[row.ID] = struct{}{}
+		out = append(out, row)
+	}
+	return out, nil
+}
+
 var _ domain.WorkerRepository = (*WorkerPostgres)(nil)

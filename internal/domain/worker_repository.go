@@ -13,4 +13,5 @@ type WorkerRepository interface {
 	UpdateProfile(ctx context.Context, p *WorkerProfile) error
 	ListOnlineWithLocation(ctx context.Context) ([]WorkerProfile, error)
 	FindNearbyOnline(ctx context.Context, lat, lng, radiusMeters float64, skillID *int) ([]WorkerProfile, error)
+	FindBySkillIDs(ctx context.Context, skillIDs []int) ([]WorkerProfile, error)
 }
