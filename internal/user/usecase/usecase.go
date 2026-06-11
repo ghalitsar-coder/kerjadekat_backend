@@ -20,3 +20,7 @@ func NewUsers(repo domain.UserRepository) *Users {
 func (u *Users) Me(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	return u.repo.FindByID(ctx, id)
 }
+
+func (u *Users) FindByPhone(ctx context.Context, phone string) (*domain.User, error) {
+	return u.repo.FindByPhone(ctx, phone)
+}

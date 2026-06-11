@@ -39,6 +39,14 @@ type Config struct {
 	JWTAccessExpiry        time.Duration `mapstructure:"-"`
 	JWTRefreshExpiry       time.Duration `mapstructure:"-"`
 
+	S3Endpoint  string `mapstructure:"S3_ENDPOINT"`
+	S3Region    string `mapstructure:"S3_REGION"`
+	S3AccessKey string `mapstructure:"S3_ACCESS_KEY"`
+	S3SecretKey string `mapstructure:"S3_SECRET_KEY"`
+	S3UseSSL    bool   `mapstructure:"S3_USE_SSL"`
+
+	StorageBackend string `mapstructure:"STORAGE_BACKEND"`
+
 	XenditAPIKey          string `mapstructure:"XENDIT_API_KEY"`
 	XenditCallbackToken   string `mapstructure:"XENDIT_CALLBACK_TOKEN"`
 	OTPLogFile            string `mapstructure:"OTP_LOG_FILE"`
@@ -66,6 +74,10 @@ func Load(envFileDir string) (*Config, error) {
 	v.SetDefault("JWT_ACCESS_EXPIRY_MINUTES", 15)
 	v.SetDefault("JWT_REFRESH_EXPIRY_DAYS", 7)
 	v.SetDefault("OTP_LOG_FILE", "tmp/otp.log")
+	v.SetDefault("STORAGE_BACKEND", "mock")
+	v.SetDefault("S3_ENDPOINT", "s3.amazonaws.com")
+	v.SetDefault("S3_REGION", "ap-southeast-3")
+	v.SetDefault("S3_USE_SSL", true)
 
 	// Unmarshal only sees keys present in Viper; bind env vars explicitly so
 	// OS environment works even when no .env file is used.
@@ -89,6 +101,12 @@ func Load(envFileDir string) (*Config, error) {
 		"JWT_SECRET",
 		"JWT_ACCESS_EXPIRY_MINUTES",
 		"JWT_REFRESH_EXPIRY_DAYS",
+		"S3_ENDPOINT",
+		"S3_REGION",
+		"S3_ACCESS_KEY",
+		"S3_SECRET_KEY",
+		"S3_USE_SSL",
+		"STORAGE_BACKEND",
 		"XENDIT_API_KEY",
 		"XENDIT_CALLBACK_TOKEN",
 		"OTP_LOG_FILE",

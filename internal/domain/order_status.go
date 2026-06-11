@@ -17,6 +17,7 @@ const (
 	PaymentPending    = "pending"
 	PaymentAuthorized = "authorized"
 	PaymentCaptured   = "captured"
+	PaymentConfirmed  = "confirmed"
 	PaymentRefunded   = "refunded"
 	PaymentFailed     = "failed"
 )

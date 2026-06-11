@@ -9,7 +9,17 @@ import (
 // OrderMatchPublisher emits realtime order events (Redis Pub/Sub) and schedules match timers.
 type OrderMatchPublisher interface {
 	PublishNewOrder(ctx context.Context, evt OrderMatchEvent) error
+	PublishOrderStatus(ctx context.Context, evt OrderStatusEvent) error
 	ScheduleMatchTimer(ctx context.Context, orderID uuid.UUID, round int, delayMs int) error
+}
+
+// OrderStatusEvent is published when an order transitions status.
+type OrderStatusEvent struct {
+	OrderID     uuid.UUID
+	NewStatus   string
+	ActorUserID *uuid.UUID
+	ConsumerID  uuid.UUID
+	WorkerID    *uuid.UUID
 }
 
 // OrderMatchEvent is fanned out to localized worker WebSocket connections.

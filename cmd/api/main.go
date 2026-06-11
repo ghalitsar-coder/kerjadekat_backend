@@ -31,6 +31,7 @@ import (
     skillusecase "kerjadekat/backend/internal/skill/usecase"
     userrepo "kerjadekat/backend/internal/user/repository"
     userusecase "kerjadekat/backend/internal/user/usecase"
+    walletrepo "kerjadekat/backend/internal/wallet/repository"
     workerrepo "kerjadekat/backend/internal/worker/repository"
     workerusecase "kerjadekat/backend/internal/worker/usecase"
     "kerjadekat/backend/pkg/database"
@@ -39,6 +40,7 @@ import (
     "kerjadekat/backend/pkg/redisx"
     "kerjadekat/backend/pkg/token"
 
+    "github.com/gin-contrib/cors"
     "github.com/gin-gonic/gin"
 )
 
@@ -77,6 +79,8 @@ func main() {
         &domain.OrderStatusLog{},
         &domain.OrderRating{},
         &domain.IncomeRecord{},
+        &domain.Wallet{},
+        &domain.WalletTransaction{},
     ); err != nil {
         log.Fatalf("migrate: %v", err)
     }
@@ -96,6 +100,7 @@ func main() {
     workerRepository := workerrepo.NewWorkerPostgres(db)
     orderRepository := orderrepo.NewOrderPostgres(db)
     skillRepository := skillrepo.NewSkillPostgres(db)
+    walletRepository := walletrepo.NewWalletPostgres(db)
     kelurahanRepository := kelurahanrepo.NewKelurahanPostgres(db)
 
     locationTTL := time.Duration(cfg.WorkerLocationTTLMinutes) * time.Minute
@@ -126,6 +131,8 @@ func main() {
         presence,
         matchPublisher,
         offerTracker,
+        workerRepository,
+        walletRepository,
         orderusecase.MatchSettings{
             RadiusMeters: float64(cfg.MatchRadiusMeters),
             TimerDelayMs: cfg.MatchTimerSeconds * 1000,
@@ -140,7 +147,20 @@ func main() {
     }
 
     agentRepository := agentrepo.NewAgentPostgres(db)
-    fileStore := storage.NewMock()
+
+    var fileStore domain.FileStorage
+    if cfg.StorageBackend == "s3" {
+        s3Store, err := storage.NewS3(cfg.S3Endpoint, cfg.S3AccessKey, cfg.S3SecretKey, cfg.S3Region, cfg.S3UseSSL)
+        if err != nil {
+            log.Fatalf("s3 storage: %v", err)
+        }
+        fileStore = s3Store
+        log.Println("storage backend: S3")
+    } else {
+        fileStore = storage.NewMock()
+        log.Println("storage backend: mock (files not persisted)")
+    }
+
     ocrService := ocr.NewMock()
     agentsUC := agentusecase.NewAgents(agentRepository, userRepository, skillRepository, fileStore, ocrService)
     agentHandler := agenthttp.NewHandler(agentsUC)
@@ -157,7 +177,16 @@ func main() {
     r := gin.New()
     r.SetTrustedProxies(nil)
     r.Use(gin.Logger(), gin.Recovery())
-	httpapi.Mount(r, httpapi.Deps{
+
+    r.Use(cors.New(cors.Config{
+        AllowOrigins:     []string{"http://localhost:5173", "http://localhost:3000", "http://kerjadekat.local"},
+        AllowMethods:     []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
+        AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Request-ID"},
+        AllowCredentials: true,
+        MaxAge:           86400,
+    }))
+
+    httpapi.Mount(r, httpapi.Deps{
 		Auth:                authUC,
 		Users:               usersUC,
 		Skills:              skillsUC,
@@ -167,6 +196,7 @@ func main() {
 		Agents:              agentHandler,
 		Tokens:              issuer,
 		WSHub:               wsHub,
+		FileStorage:         fileStore,
 		XenditCallbackToken: cfg.XenditCallbackToken,
 	})
 

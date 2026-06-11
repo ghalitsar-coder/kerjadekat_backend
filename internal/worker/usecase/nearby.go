@@ -14,6 +14,7 @@ import (
 type NearbyWorkerItem struct {
 	UserID       uuid.UUID `json:"user_id"`
 	FullName     string    `json:"full_name"`
+	ProfilePhoto *string   `json:"profile_photo,omitempty"`
 	Latitude     float64   `json:"latitude"`
 	Longitude    float64   `json:"longitude"`
 	DistanceM    float64   `json:"distance_m"`
@@ -76,6 +77,7 @@ func (w *Workers) Nearby(ctx context.Context, in NearbyInput) ([]NearbyWorkerIte
 		items = append(items, NearbyWorkerItem{
 			UserID:       p.UserID,
 			FullName:     p.User.FullName,
+			ProfilePhoto: p.User.ProfilePhoto,
 			Latitude:     lat,
 			Longitude:    lng,
 			DistanceM:    geo.HaversineM(in.Latitude, in.Longitude, lat, lng),

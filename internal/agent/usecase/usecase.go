@@ -58,6 +58,8 @@ type RegisterWorkerInput struct {
 	ProfileFilename string
 	ProfileContentType string
 	ProfileSize     int64
+	Latitude        float64
+	Longitude       float64
 }
 
 type OCRPreview struct {
@@ -74,6 +76,7 @@ type RegisterWorkerResult struct {
 type AgentWorkerSummary struct {
 	UserID        uuid.UUID  `json:"user_id"`
 	FullName      string     `json:"full_name"`
+	ProfilePhoto  *string    `json:"profile_photo,omitempty"`
 	PhoneNumber   *string    `json:"phone_number"`
 	Status        string     `json:"status"`
 	Availability  string     `json:"availability"`
@@ -111,6 +114,7 @@ func (a *Agents) ListWorkers(ctx context.Context, agentID uuid.UUID) (*ListAgent
 		items = append(items, AgentWorkerSummary{
 			UserID:        user.ID,
 			FullName:      user.FullName,
+			ProfilePhoto:  user.ProfilePhoto,
 			PhoneNumber:   user.PhoneNumber,
 			Status:        user.Status,
 			Availability:  row.Availability,
@@ -221,6 +225,13 @@ func (a *Agents) RegisterWorker(ctx context.Context, in RegisterWorkerInput) (*R
 		ID:           profileID,
 		UserID:       userID,
 		Availability: domain.WorkerAvailabilityOffline,
+	}
+	if in.Latitude != 0 && in.Longitude != 0 {
+		profile.LastLocation = &domain.NullPoint{
+			Lat:   in.Latitude,
+			Lng:   in.Longitude,
+			Valid: true,
+		}
 	}
 
 	skills := make([]domain.WorkerSkill, 0, len(in.SkillIDs))

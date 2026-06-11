@@ -84,10 +84,10 @@ func (h *Hub) unregister(c *client) {
 	close(c.send)
 }
 
-func (h *Hub) sendToWorkers(workerIDs []uuid.UUID, payload []byte) {
+func (h *Hub) sendToUsers(userIDs []uuid.UUID, payload []byte) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
-	for _, id := range workerIDs {
+	for _, id := range userIDs {
 		for cl := range h.clients[id] {
 			select {
 			case cl.send <- payload:
@@ -97,9 +97,9 @@ func (h *Hub) sendToWorkers(workerIDs []uuid.UUID, payload []byte) {
 	}
 }
 
-// RunSubscribe listens on orders:new and fans out to worker connections.
+// RunSubscribe listens on orders:new and orders:status, fanning out to connections.
 func (h *Hub) RunSubscribe(ctx context.Context) {
-	sub := h.rdb.Subscribe(ctx, order.ChannelOrdersNew)
+	sub := h.rdb.Subscribe(ctx, order.ChannelOrdersNew, order.ChannelOrdersStatus)
 	ch := sub.Channel()
 	go func() {
 		defer sub.Close()
@@ -111,16 +111,36 @@ func (h *Hub) RunSubscribe(ctx context.Context) {
 				if !ok {
 					return
 				}
-				var evt order.NewOrderAvailable
-				if err := json.Unmarshal([]byte(msg.Payload), &evt); err != nil {
-					log.Printf("ws hub: bad pubsub payload: %v", err)
-					continue
+
+				switch msg.Channel {
+				case order.ChannelOrdersNew:
+					var evt order.NewOrderAvailable
+					if err := json.Unmarshal([]byte(msg.Payload), &evt); err != nil {
+						log.Printf("ws hub: bad new_order payload: %v", err)
+						continue
+					}
+					payload, err := json.Marshal(evt)
+					if err != nil {
+						continue
+					}
+					h.sendToUsers(evt.WorkerUserIDs, payload)
+
+				case order.ChannelOrdersStatus:
+					var evt order.OrderStatusChanged
+					if err := json.Unmarshal([]byte(msg.Payload), &evt); err != nil {
+						log.Printf("ws hub: bad status payload: %v", err)
+						continue
+					}
+					payload, err := json.Marshal(evt)
+					if err != nil {
+						continue
+					}
+					recipients := []uuid.UUID{evt.ConsumerID}
+					if evt.WorkerID != nil {
+						recipients = append(recipients, *evt.WorkerID)
+					}
+					h.sendToUsers(recipients, payload)
 				}
-				payload, err := json.Marshal(evt)
-				if err != nil {
-					continue
-				}
-				h.sendToWorkers(evt.WorkerUserIDs, payload)
 			}
 		}
 	}()

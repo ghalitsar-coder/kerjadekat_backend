@@ -31,6 +31,8 @@ func main() {
         &domain.OrderStatusLog{},
         &domain.OrderRating{},
         &domain.IncomeRecord{},
+        &domain.Wallet{},
+        &domain.WalletTransaction{},
     ); err != nil {
         log.Printf("Gagal melakukan migrasi database: %v", err)
     }

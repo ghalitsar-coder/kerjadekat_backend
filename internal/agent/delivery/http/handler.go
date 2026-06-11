@@ -75,6 +75,14 @@ func (h *Handler) RegisterWorker(c *gin.Context) {
 		return
 	}
 
+	var latitude, longitude float64
+	if latStr := strings.TrimSpace(c.PostForm("latitude")); latStr != "" {
+		latitude, _ = strconv.ParseFloat(latStr, 64)
+	}
+	if lngStr := strings.TrimSpace(c.PostForm("longitude")); lngStr != "" {
+		longitude, _ = strconv.ParseFloat(lngStr, 64)
+	}
+
 	ktpFile, ktpHeader, err := c.Request.FormFile("ktp_photo")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ktp_photo required"})
@@ -102,6 +110,8 @@ func (h *Handler) RegisterWorker(c *gin.Context) {
 		RtRw:               rtRw,
 		KelurahanID:        kelurahanID,
 		SkillIDs:           skillIDs,
+		Latitude:           latitude,
+		Longitude:          longitude,
 		KTPPhoto:           ktpFile,
 		KTPFilename:        ktpHeader.Filename,
 		KTPContentType:     ktpHeader.Header.Get("Content-Type"),

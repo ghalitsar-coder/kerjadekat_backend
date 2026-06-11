@@ -35,6 +35,19 @@ func (p *MatchPublisher) PublishNewOrder(ctx context.Context, evt domain.OrderMa
 	})
 }
 
+func (p *MatchPublisher) PublishOrderStatus(ctx context.Context, evt domain.OrderStatusEvent) error {
+	if p.redis == nil {
+		return fmt.Errorf("redis publisher not configured")
+	}
+	return p.redis.PublishOrderStatus(ctx, OrderStatusChanged{
+		OrderID:     evt.OrderID,
+		NewStatus:   evt.NewStatus,
+		ActorUserID: evt.ActorUserID,
+		ConsumerID:  evt.ConsumerID,
+		WorkerID:    evt.WorkerID,
+	})
+}
+
 func (p *MatchPublisher) ScheduleMatchTimer(ctx context.Context, orderID uuid.UUID, round int, delayMs int) error {
 	if p.mq == nil {
 		return fmt.Errorf("rabbitmq not configured")

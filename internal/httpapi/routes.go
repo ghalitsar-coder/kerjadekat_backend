@@ -5,6 +5,7 @@ package httpapi
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	authusecase "kerjadekat/backend/internal/auth/usecase"
 	agenthttp "kerjadekat/backend/internal/agent/delivery/http"
@@ -33,6 +34,7 @@ type Deps struct {
 	Agents              *agenthttp.Handler
 	Tokens              *token.Issuer
 	WSHub               *ws.Hub
+	FileStorage         domain.FileStorage
 	XenditCallbackToken string
 }
 
@@ -173,6 +175,26 @@ func Mount(r *gin.Engine, d Deps) {
 		c.JSON(http.StatusOK, tokens)
 	})
 
+	v1.POST("/auth/phone-login", func(c *gin.Context) {
+		var body struct {
+			PhoneNumber string `json:"phone_number" binding:"required"`
+		}
+		if err := c.ShouldBindJSON(&body); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid json"})
+			return
+		}
+		u, err := d.Users.FindByPhone(c.Request.Context(), body.PhoneNumber)
+		if err != nil {
+			WriteError(c, err)
+			return
+		}
+		if err := d.Auth.RequestOTP(c.Request.Context(), body.PhoneNumber); err != nil {
+			WriteError(c, err)
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"phone_number": *u.PhoneNumber, "role": u.Role})
+	})
+
 	v1.POST("/auth/refresh", func(c *gin.Context) {
 		var body struct {
 			RefreshToken string `json:"refresh_token" binding:"required"`
@@ -188,6 +210,23 @@ func Mount(r *gin.Engine, d Deps) {
 		}
 		c.JSON(http.StatusOK, tokens)
 	})
+
+	if d.FileStorage != nil {
+		v1.GET("/files/photo", func(c *gin.Context) {
+			key := c.Query("key")
+			if key == "" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "key required"})
+				return
+			}
+			bucket := bucketFromKey(key)
+			url, err := d.FileStorage.PresignedURL(c.Request.Context(), bucket, key, domain.PresignedURLExpiry)
+			if err != nil {
+				WriteError(c, err)
+				return
+			}
+			c.Redirect(http.StatusFound, url)
+		})
+	}
 
 	authed := v1.Group("", middleware.JWTAuth(d.Tokens))
 
@@ -398,6 +437,118 @@ func Mount(r *gin.Engine, d Deps) {
 		c.JSON(http.StatusOK, ord)
 	})
 
+	authed.POST("/orders/:id/reject", func(c *gin.Context) {
+		cl, ok := middleware.Claims(c)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing claims"})
+			return
+		}
+		if cl.Role != domain.RoleWorker {
+			WriteError(c, domain.ErrForbidden)
+			return
+		}
+		id, err := uuid.Parse(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+			return
+		}
+		if err := d.Orders.Reject(c.Request.Context(), id, cl.UserID); err != nil {
+			WriteError(c, err)
+			return
+		}
+		c.Status(http.StatusNoContent)
+	})
+
+	authed.POST("/orders/:id/confirm-payment", func(c *gin.Context) {
+		cl, ok := middleware.Claims(c)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing claims"})
+			return
+		}
+		if cl.Role != domain.RoleConsumer {
+			WriteError(c, domain.ErrForbidden)
+			return
+		}
+		id, err := uuid.Parse(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+			return
+		}
+		ord, err := d.Orders.ConfirmPayment(c.Request.Context(), id, cl.UserID)
+		if err != nil {
+			WriteError(c, err)
+			return
+		}
+		c.JSON(http.StatusOK, ord)
+	})
+
+	authed.POST("/orders/:id/rate", func(c *gin.Context) {
+		cl, ok := middleware.Claims(c)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing claims"})
+			return
+		}
+		if cl.Role != domain.RoleConsumer {
+			WriteError(c, domain.ErrForbidden)
+			return
+		}
+		id, err := uuid.Parse(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+			return
+		}
+		var body struct {
+			Score   int16   `json:"score" binding:"required"`
+			Comment *string `json:"comment"`
+		}
+		if err := c.ShouldBindJSON(&body); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid json"})
+			return
+		}
+		ord, err := d.Orders.Rate(c.Request.Context(), id, cl.UserID, orderusecase.RateOrderInput{
+			Score:   body.Score,
+			Comment: body.Comment,
+		})
+		if err != nil {
+			WriteError(c, err)
+			return
+		}
+		c.JSON(http.StatusOK, ord)
+	})
+
+	authed.GET("/wallets/me", func(c *gin.Context) {
+		cl, ok := middleware.Claims(c)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing claims"})
+			return
+		}
+		wallet, err := d.Orders.GetWallet(c.Request.Context(), cl.UserID)
+		if err != nil {
+			WriteError(c, err)
+			return
+		}
+		c.JSON(http.StatusOK, wallet)
+	})
+
+	authed.GET("/wallets/me/transactions", func(c *gin.Context) {
+		cl, ok := middleware.Claims(c)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing claims"})
+			return
+		}
+		limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+		offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
+		items, err := d.Orders.ListWalletTransactions(c.Request.Context(), cl.UserID, limit, offset)
+		if err != nil {
+			WriteError(c, err)
+			return
+		}
+		if items == nil {
+			items = []domain.WalletTransaction{}
+		}
+		c.JSON(http.StatusOK, gin.H{"items": items})
+	})
+
 	authed.GET("/workers/nearby", func(c *gin.Context) {
 		lat, err := strconv.ParseFloat(c.Query("lat"), 64)
 		if err != nil {
@@ -505,4 +656,12 @@ func Mount(r *gin.Engine, d Deps) {
 		}
 		c.Status(http.StatusNoContent)
 	})
+}
+
+func bucketFromKey(key string) string {
+	parts := strings.SplitN(key, "/", 3)
+	if len(parts) >= 2 {
+		return parts[1]
+	}
+	return "profiles"
 }

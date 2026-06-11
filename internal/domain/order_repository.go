@@ -19,4 +19,5 @@ type OrderRepository interface {
 
 	AppendStatusLog(ctx context.Context, log *OrderStatusLog) error
 	CreateIncomeRecord(ctx context.Context, rec *IncomeRecord) error
+	CreateRating(ctx context.Context, r *OrderRating) error
 }

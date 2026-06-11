@@ -6,6 +6,7 @@ import (
 	"io"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"kerjadekat/backend/internal/domain"
 
@@ -33,6 +34,14 @@ func (m *Mock) Store(ctx context.Context, bucket, filename string, r io.Reader, 
 		return domain.StoredObject{}, err
 	}
 	return domain.StoredObject{Key: key, ContentType: contentType, Size: size}, nil
+}
+
+func (m *Mock) PresignedURL(ctx context.Context, bucket, key string, expiry time.Duration) (string, error) {
+	return fmt.Sprintf("/api/v1/files/mock?bucket=%s&key=%s&expiry=%d", bucket, key, int(expiry.Seconds())), nil
+}
+
+func (m *Mock) Delete(ctx context.Context, bucket, key string) error {
+	return nil
 }
 
 func guessExt(contentType string) string {

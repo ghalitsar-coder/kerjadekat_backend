@@ -96,4 +96,8 @@ func (r *OrderPostgres) CreateIncomeRecord(ctx context.Context, rec *domain.Inco
 	return r.db.WithContext(ctx).Create(rec).Error
 }
 
+func (r *OrderPostgres) CreateRating(ctx context.Context, rt *domain.OrderRating) error {
+	return r.db.WithContext(ctx).Create(rt).Error
+}
+
 var _ domain.OrderRepository = (*OrderPostgres)(nil)
