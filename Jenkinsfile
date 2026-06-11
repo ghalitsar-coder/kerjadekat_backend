@@ -10,7 +10,7 @@ pipeline {
                     script {
                         // Ambil 7 karakter pertama dari commit hash git untuk tag image
                         env.COMMIT_HASH = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-                        sh "docker build -t ${DOCKERHUB_USER}/${IMAGE_NAME}:${COMMIT_HASH} -t ${DOCKERHUB_USER}/${IMAGE_NAME}:latest -f Dockerfile ."
+                        sh "docker build --network host --build-arg GOPROXY=https://goproxy.io,direct -t ${DOCKERHUB_USER}/${IMAGE_NAME}:${COMMIT_HASH} -t ${DOCKERHUB_USER}/${IMAGE_NAME}:latest -f Dockerfile ."
                     }
                 }
             }

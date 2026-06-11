@@ -3,6 +3,9 @@
 # ==========================================
 FROM golang:alpine3.24 AS builder
 
+ARG GOPROXY=https://goproxy.io,direct
+ENV GOPROXY=$GOPROXY
+
 WORKDIR /app
 
 # Copy file dependency dan download modul
