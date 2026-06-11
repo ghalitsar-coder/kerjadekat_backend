@@ -6,6 +6,9 @@ FROM golang:alpine3.24 AS builder
 ARG GOPROXY=https://goproxy.io,direct
 ENV GOPROXY=$GOPROXY
 
+# git diperlukan oleh GOPROXY=direct fallback
+RUN apk add --no-cache git
+
 WORKDIR /app
 
 # Copy file dependency dan download modul
