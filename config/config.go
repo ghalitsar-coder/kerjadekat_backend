@@ -47,6 +47,8 @@ type Config struct {
 
 	StorageBackend string `mapstructure:"STORAGE_BACKEND"`
 
+	CloudinaryURL string `mapstructure:"CLOUDINARY_URL"`
+
 	XenditAPIKey          string `mapstructure:"XENDIT_API_KEY"`
 	XenditCallbackToken   string `mapstructure:"XENDIT_CALLBACK_TOKEN"`
 	OTPLogFile            string `mapstructure:"OTP_LOG_FILE"`
@@ -107,6 +109,7 @@ func Load(envFileDir string) (*Config, error) {
 		"S3_SECRET_KEY",
 		"S3_USE_SSL",
 		"STORAGE_BACKEND",
+		"CLOUDINARY_URL",
 		"XENDIT_API_KEY",
 		"XENDIT_CALLBACK_TOKEN",
 		"OTP_LOG_FILE",

@@ -49,6 +49,10 @@ func (o *Orders) Create(ctx context.Context, in CreateOrderInput) (*domain.Order
 
 	inv := authRes.InvoiceID
 	authID := authRes.AuthID
+	var payURL *string
+	if authRes.PaymentURL != "" {
+		payURL = &authRes.PaymentURL
+	}
 	ord := &domain.Order{
 		ID:               orderID,
 		ConsumerID:       in.ConsumerID,
@@ -61,6 +65,7 @@ func (o *Orders) Create(ctx context.Context, in CreateOrderInput) (*domain.Order
 		PaymentMethodFee: in.PaymentMethodFee,
 		XenditInvoiceID:  &inv,
 		FeeAuthID:        &authID,
+		PaymentURL:       payURL,
 		PaymentStatus:    domain.PaymentAuthorized,
 	}
 

@@ -148,18 +148,29 @@ func main() {
 
     agentRepository := agentrepo.NewAgentPostgres(db)
 
-    var fileStore domain.FileStorage
-    if cfg.StorageBackend == "s3" {
-        s3Store, err := storage.NewS3(cfg.S3Endpoint, cfg.S3AccessKey, cfg.S3SecretKey, cfg.S3Region, cfg.S3UseSSL)
-        if err != nil {
-            log.Fatalf("s3 storage: %v", err)
-        }
-        fileStore = s3Store
-        log.Println("storage backend: S3")
-    } else {
-        fileStore = storage.NewMock()
-        log.Println("storage backend: mock (files not persisted)")
-    }
+	var fileStore domain.FileStorage
+	switch cfg.StorageBackend {
+	case "s3":
+		s3Store, err := storage.NewS3(cfg.S3Endpoint, cfg.S3AccessKey, cfg.S3SecretKey, cfg.S3Region, cfg.S3UseSSL)
+		if err != nil {
+			log.Fatalf("s3 storage: %v", err)
+		}
+		fileStore = s3Store
+		log.Println("storage backend: S3")
+	case "cloudinary":
+		if cfg.CloudinaryURL == "" {
+			log.Fatalf("cloudinary storage: CLOUDINARY_URL is required")
+		}
+		cldStore, err := storage.NewCloudinary(cfg.CloudinaryURL)
+		if err != nil {
+			log.Fatalf("cloudinary storage: %v", err)
+		}
+		fileStore = cldStore
+		log.Println("storage backend: Cloudinary")
+	default:
+		fileStore = storage.NewMock()
+		log.Println("storage backend: mock (files not persisted)")
+	}
 
     ocrService := ocr.NewMock()
     agentsUC := agentusecase.NewAgents(agentRepository, userRepository, skillRepository, fileStore, ocrService)

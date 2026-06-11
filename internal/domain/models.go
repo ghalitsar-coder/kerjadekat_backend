@@ -103,6 +103,7 @@ type Order struct {
 	PaymentMethodFee   *string    `gorm:"type:varchar(50)"`
 	XenditInvoiceID    *string    `gorm:"type:varchar(100)"`
 	FeeAuthID          *string    `gorm:"type:varchar(100)"`
+	PaymentURL         *string    `gorm:"type:varchar(500)"`
 	PaymentStatus      string     `gorm:"type:varchar(20);not null;default:pending"`
 	ScheduledAt        *time.Time `gorm:"type:timestamptz"`
 	StartedAt          *time.Time `gorm:"type:timestamptz"`

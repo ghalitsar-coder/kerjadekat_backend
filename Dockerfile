@@ -1,7 +1,7 @@
 # ==========================================
 # Tahap 1: Builder
 # ==========================================
-FROM golang:1.22.12-alpine AS builder
+FROM golang:alpine3.24 AS builder
 
 WORKDIR /app
 
@@ -30,7 +30,7 @@ COPY --from=builder /app/kerjadekat-api .
 COPY --from=builder /app/config /app/config 
 
 # Sesuaikan dengan port yang digunakan di main.go Anda (misal 8080)
-EXPOSE 8080
+EXPOSE 8085
 
 # Jalankan aplikasi
 CMD ["./kerjadekat-api"]

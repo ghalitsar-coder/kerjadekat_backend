@@ -11,8 +11,9 @@ type AuthorizeRequest struct {
 
 // AuthorizeResult returns gateway identifiers to persist on orders.
 type AuthorizeResult struct {
-	InvoiceID string
-	AuthID    string
+	InvoiceID  string
+	AuthID     string
+	PaymentURL string // QR code image URL or deeplink for the customer
 }
 
 // CaptureRequest finalizes an authorized hold.
