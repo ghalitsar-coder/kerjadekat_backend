@@ -214,7 +214,8 @@ func main() {
         MaxAge:           86400,
     }))
 
-    httpapi.Mount(r, httpapi.Deps{
+	oauthCallbackBase := cfg.FrontendURL + "/api/v1/auth"
+	httpapi.Mount(r, httpapi.Deps{
 		Auth:                authUC,
 		Users:               usersUC,
 		Skills:              skillsUC,
@@ -227,6 +228,14 @@ func main() {
 		FileStorage:         fileStore,
 		XenditCallbackToken: cfg.XenditCallbackToken,
 		AI:                  aiService,
+		OAuthConfig: authusecase.OAuthConfig{
+			GoogleID:       cfg.AuthGoogleID,
+			GoogleSecret:   cfg.AuthGoogleSecret,
+			GitHubID:       cfg.AuthGitHubID,
+			GitHubSecret:   cfg.AuthGitHubSecret,
+			FrontendURL:    cfg.FrontendURL,
+			CallbackBase:   oauthCallbackBase,
+		},
 	})
 
     addr := ":" + cfg.ServerPort

@@ -56,6 +56,12 @@ type Config struct {
 	AIAPIURL  string `mapstructure:"AI_API_URL"`
 	AIModel   string `mapstructure:"AI_MODEL"`
 	AIAPIKey  string `mapstructure:"AI_API_KEY"`
+
+	FrontendURL      string `mapstructure:"FRONTEND_URL"`
+	AuthGoogleID     string `mapstructure:"AUTH_GOOGLE_ID"`
+	AuthGoogleSecret string `mapstructure:"AUTH_GOOGLE_SECRET"`
+	AuthGitHubID     string `mapstructure:"AUTH_GITHUB_ID"`
+	AuthGitHubSecret string `mapstructure:"AUTH_GITHUB_SECRET"`
 }
 
 // Load reads configuration from OS environment variables and, if present, a .env file.
@@ -84,6 +90,7 @@ func Load(envFileDir string) (*Config, error) {
 	v.SetDefault("S3_ENDPOINT", "s3.amazonaws.com")
 	v.SetDefault("S3_REGION", "ap-southeast-3")
 	v.SetDefault("S3_USE_SSL", true)
+	v.SetDefault("FRONTEND_URL", "http://localhost:5173")
 
 	// Unmarshal only sees keys present in Viper; bind env vars explicitly so
 	// OS environment works even when no .env file is used.
@@ -120,6 +127,11 @@ func Load(envFileDir string) (*Config, error) {
 		"XENDIT_API_KEY",
 		"XENDIT_CALLBACK_TOKEN",
 		"OTP_LOG_FILE",
+		"FRONTEND_URL",
+		"AUTH_GOOGLE_ID",
+		"AUTH_GOOGLE_SECRET",
+		"AUTH_GITHUB_ID",
+		"AUTH_GITHUB_SECRET",
 	}
 	for _, k := range envKeys {
 		if err := v.BindEnv(k); err != nil {

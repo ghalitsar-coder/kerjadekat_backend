@@ -3,7 +3,9 @@
 package httpapi
 
 import (
+	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -38,6 +40,7 @@ type Deps struct {
 	FileStorage         domain.FileStorage
 	XenditCallbackToken string
 	AI                  *aiusecase.AIService
+	OAuthConfig         authusecase.OAuthConfig
 }
 
 func Mount(r *gin.Engine, d Deps) {
@@ -212,6 +215,43 @@ func Mount(r *gin.Engine, d Deps) {
 		}
 		c.JSON(http.StatusOK, tokens)
 	})
+
+	oauthCfg := d.OAuthConfig
+	if oauthCfg.GoogleID != "" && oauthCfg.GitHubID != "" {
+		v1.GET("/auth/:provider/login", func(c *gin.Context) {
+			provider := c.Param("provider")
+			role := c.DefaultQuery("role", "consumer")
+			if provider != "google" && provider != "github" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported provider"})
+				return
+			}
+			redirectURL := d.Auth.OAuthLoginURL(provider, role, oauthCfg)
+			c.Redirect(http.StatusTemporaryRedirect, redirectURL)
+		})
+
+		v1.GET("/auth/:provider/callback", func(c *gin.Context) {
+			provider := c.Param("provider")
+			code := c.Query("code")
+			state := c.Query("state")
+			if code == "" || state == "" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "missing code or state"})
+				return
+			}
+			if provider != "google" && provider != "github" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported provider"})
+				return
+			}
+			tokens, err := d.Auth.HandleOAuthCallback(c.Request.Context(), provider, code, state, oauthCfg)
+			if err != nil {
+				redirectURL := fmt.Sprintf("%s/auth/login?error=%s", oauthCfg.FrontendURL, url.QueryEscape(err.Error()))
+				c.Redirect(http.StatusTemporaryRedirect, redirectURL)
+				return
+			}
+			redirectURL := fmt.Sprintf("%s/auth/complete?access_token=%s&refresh_token=%s&expires_in=%d",
+				oauthCfg.FrontendURL, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresIn)
+			c.Redirect(http.StatusTemporaryRedirect, redirectURL)
+		})
+	}
 
 	if d.FileStorage != nil {
 		v1.GET("/files/photo", func(c *gin.Context) {
