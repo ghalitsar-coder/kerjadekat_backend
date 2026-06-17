@@ -24,7 +24,7 @@ const oauthStateCookie = "oauth_state"
 func googleRedirectURL(cfg OAuthConfig, state string) string {
 	v := url.Values{
 		"client_id":    {cfg.GoogleID},
-		"redirect_uri": {cfg.CallbackBase + "/google"},
+		"redirect_uri": {cfg.CallbackBase + "/google/callback"},
 		"response_type": {"code"},
 		"scope":         {"openid email profile"},
 		"state":         {state},
@@ -35,7 +35,7 @@ func googleRedirectURL(cfg OAuthConfig, state string) string {
 func githubRedirectURL(cfg OAuthConfig, state string) string {
 	v := url.Values{
 		"client_id":    {cfg.GitHubID},
-		"redirect_uri": {cfg.CallbackBase + "/github"},
+		"redirect_uri": {cfg.CallbackBase + "/github/callback"},
 		"scope":        {"read:user user:email"},
 		"state":        {state},
 	}
@@ -58,7 +58,7 @@ func exchangeGoogleCode(ctx context.Context, cfg OAuthConfig, code string) (*goo
 		"code":          {code},
 		"client_id":     {cfg.GoogleID},
 		"client_secret": {cfg.GoogleSecret},
-		"redirect_uri":  {cfg.CallbackBase + "/google"},
+		"redirect_uri":  {cfg.CallbackBase + "/google/callback"},
 		"grant_type":    {"authorization_code"},
 	}
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://oauth2.googleapis.com/token", strings.NewReader(v.Encode()))
@@ -128,7 +128,7 @@ func exchangeGitHubCode(ctx context.Context, cfg OAuthConfig, code string) (*git
 		"code":          {code},
 		"client_id":     {cfg.GitHubID},
 		"client_secret": {cfg.GitHubSecret},
-		"redirect_uri":  {cfg.CallbackBase + "/github"},
+		"redirect_uri":  {cfg.CallbackBase + "/github/callback"},
 	}
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://github.com/login/oauth/access_token", strings.NewReader(v.Encode()))
 	if err != nil {
