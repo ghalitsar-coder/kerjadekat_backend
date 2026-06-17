@@ -209,7 +209,7 @@ func (o *Orders) Accept(ctx context.Context, orderID uuid.UUID, in AcceptOrderIn
 	return ord, err
 }
 
-func (o *Orders) Start(ctx context.Context, orderID uuid.UUID, workerUserID uuid.UUID) (*domain.Order, error) {
+func (o *Orders) Depart(ctx context.Context, orderID uuid.UUID, workerUserID uuid.UUID) (*domain.Order, error) {
 	err := o.orders.WithTx(ctx, func(ctx context.Context, r domain.OrderRepository) error {
 		ord, err := r.FindByID(ctx, orderID)
 		if err != nil {
@@ -223,8 +223,37 @@ func (o *Orders) Start(ctx context.Context, orderID uuid.UUID, workerUserID uuid
 		}
 		prev := ord.Status
 		now := time.Now()
-		ord.Status = domain.OrderStatusInProgress
+		ord.Status = domain.OrderStatusWorkerDeparted
 		ord.StartedAt = &now
+		if err := r.Update(ctx, ord); err != nil {
+			return err
+		}
+		return o.appendLog(ctx, r, ord.ID, &prev, domain.OrderStatusWorkerDeparted, &workerUserID, nil)
+	})
+	if err != nil {
+		return nil, err
+	}
+	ord, err := o.orders.FindByID(ctx, orderID)
+	if err == nil {
+		o.publishStatus(ctx, ord, &workerUserID)
+	}
+	return ord, err
+}
+
+func (o *Orders) Start(ctx context.Context, orderID uuid.UUID, workerUserID uuid.UUID) (*domain.Order, error) {
+	err := o.orders.WithTx(ctx, func(ctx context.Context, r domain.OrderRepository) error {
+		ord, err := r.FindByID(ctx, orderID)
+		if err != nil {
+			return err
+		}
+		if ord.WorkerID == nil || *ord.WorkerID != workerUserID {
+			return domain.ErrForbidden
+		}
+		if ord.Status != domain.OrderStatusWorkerDeparted {
+			return domain.ErrInvalidTransition
+		}
+		prev := ord.Status
+		ord.Status = domain.OrderStatusInProgress
 		if err := r.Update(ctx, ord); err != nil {
 			return err
 		}

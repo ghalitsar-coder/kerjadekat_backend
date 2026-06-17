@@ -436,6 +436,29 @@ func Mount(r *gin.Engine, d Deps) {
 		c.JSON(http.StatusOK, ord)
 	})
 
+	authed.POST("/orders/:id/depart", func(c *gin.Context) {
+		cl, ok := middleware.Claims(c)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing claims"})
+			return
+		}
+		if cl.Role != domain.RoleWorker {
+			WriteError(c, domain.ErrForbidden)
+			return
+		}
+		id, err := uuid.Parse(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+			return
+		}
+		ord, err := d.Orders.Depart(c.Request.Context(), id, cl.UserID)
+		if err != nil {
+			WriteError(c, err)
+			return
+		}
+		c.JSON(http.StatusOK, ord)
+	})
+
 	authed.POST("/orders/:id/start", func(c *gin.Context) {
 		cl, ok := middleware.Claims(c)
 		if !ok {
